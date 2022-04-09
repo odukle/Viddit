@@ -7,7 +7,7 @@
             type="com.google.android.material.bottomsheet.BottomSheetDialog" />
     </data>
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/black">
@@ -41,6 +41,6 @@
                 </LinearLayout>
             </com.facebook.shimmer.ShimmerFrameLayout>
         </LinearLayout>
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
 </layout>

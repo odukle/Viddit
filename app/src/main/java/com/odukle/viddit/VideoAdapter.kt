@@ -12,11 +12,13 @@ import android.os.Build
 import android.os.Environment
 import android.util.Log
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -25,6 +27,7 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.imageview.ShapeableImageView
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import com.odukle.viddit.Helper.Companion.backstack
@@ -42,7 +45,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.*
 
 
 private const val TAG = "VideoAdapter"
@@ -202,6 +204,13 @@ class VideoAdapter(
                 }
 
                 main.startActivity(intent)
+            }
+
+            arrayOf(ivUpvotes, tvUpvotes).forEach {
+                it.setOnClickListener {
+                    val customTabsIntent = CustomTabsIntent.Builder().build()
+                    customTabsIntent.launchUrl(main, Uri.parse(post.permalink))
+                }
             }
         }
     }
@@ -470,15 +479,38 @@ class VideoAdapter(
                 ///////////////////////////////////////////////////// ADD VIEW TO THE LAYOUT
                 if (author != "null") {
                     val tvAuthor = TextView(main)
-                    tvAuthor.setPadding(px, 0, 0, px)
-                    val hrsAgo = (Calendar.getInstance().timeInMillis - dateCreated * 1000L) / 3600000
-                    val strHrsAgo = if (hrsAgo <= 1) " hr ago" else " hrs ago"
-                    tvAuthor.text = "u/" + author + " • " + hrsAgo.toString() + strHrsAgo
+                    tvAuthor.setPadding(px, 0, 0, 0)
+                    tvAuthor.text = "u/" + author + " • " + dateCreated.toTimeAgo()
                     tvAuthor.textSize = 12F
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         tvAuthor.typeface = main.resources.getFont(R.font.bold)
                     }
-                    layout.addView(tvAuthor)
+
+                    val iv = ShapeableImageView(main)
+                    val ivParams = LinearLayout.LayoutParams(24F.toDp(), 24F.toDp())
+                    ivParams.setMargins(px, 0, 0, 0)
+                    iv.layoutParams = ivParams
+                    iv.shapeAppearanceModel = iv.shapeAppearanceModel
+                        .toBuilder()
+                        .setAllCornerSizes(24F)
+                        .build()
+                    CoroutineScope(IO).launch {
+                        val icon = getUserIcon(author)
+                        main.runOnUiThread {
+                            Glide.with(main)
+                                .load(icon)
+                                .into(iv)
+                        }
+                    }
+
+                    val ll = LinearLayout(main)
+                    ll.setVerticalGravity(Gravity.CENTER_VERTICAL)
+                    ll.orientation = LinearLayout.HORIZONTAL
+
+                    ll.addView(iv)
+                    ll.addView(tvAuthor)
+
+                    if (author.lowercase() != "automoderator") layout.addView(ll)
                 }
 
                 if (body != "null") {
@@ -489,7 +521,7 @@ class VideoAdapter(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         tvBody.typeface = main.resources.getFont(R.font.bold)
                     }
-                    layout.addView(tvBody)
+                    if (author.lowercase() != "automoderator") layout.addView(tvBody)
                 }
 
                 if (score != "null") {
@@ -500,7 +532,7 @@ class VideoAdapter(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         tvScore.typeface = main.resources.getFont(R.font.bold)
                     }
-                    layout.addView(tvScore)
+                    if (author.lowercase() != "automoderator") layout.addView(tvScore)
                 }
 
                 /////////////////////////////////////////////////////
@@ -509,6 +541,7 @@ class VideoAdapter(
                 } catch (e: java.lang.Exception) {
                     null
                 }
+
                 addCommentView(replies, 20F, layout)
             }
         }
