@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="SearchFragment"
+            type="com.odukle.viddit.SearchFragment" />
+    </data>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/black">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:paddingHorizontal="10dp"
+                app:layout_scrollFlags="scroll|enterAlways">
+
+                <TextView
+                    android:id="@+id/tv_query"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="5dp"
+                    android:layout_toStartOf="@id/tv_feed"
+                    android:fontFamily="@font/bold"
+                    android:text="Top subreddits today"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_feed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="10dp"
+                    android:layout_toStartOf="@id/iv_back_to_feed"
+                    android:fontFamily="@font/bold"
+                    android:paddingHorizontal="5dp"
+                    android:text="Feed"
+                    android:textSize="16sp" />
+
+                <ImageView
+                    android:id="@+id/iv_back_to_feed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:src="@drawable/ic_forward" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/et_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_margin="10dp"
+                    android:layout_toStartOf="@id/btn_search"
+                    app:cardCornerRadius="10dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_search"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginHorizontal="10dp"
+                        android:background="@null"
+                        android:fontFamily="@font/regular"
+                        android:hint="Search subreddits"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:maxLines="1" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/btn_search"
+                    android:layout_width="50dp"
+                    android:layout_height="40dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginVertical="10dp"
+                    android:layout_marginEnd="10dp"
+                    app:cardCornerRadius="10dp">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_search" />
+                </com.google.android.material.card.MaterialCardView>
+
+            </RelativeLayout>
+
+            <HorizontalScrollView
+                android:id="@+id/scroll_view_chips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="10dp"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleLine="true"
+                    app:selectionRequired="true"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_videos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="videos" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_memes"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="memes" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_funny"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="funny" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_aww"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="aww" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_wholesome"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="wholesome" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_dank"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="dank" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_news"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="news" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/movies"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="movies" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/sports"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="sports" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/travel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="travel" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/science"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="science" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/food"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="food" />
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:animateLayoutChanges="true"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:id="@+id/card_loading"
+                android:layout_marginVertical="20dp"
+                app:cardCornerRadius="50dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:visibility="visible"
+                    android:layout_marginVertical="10dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="10dp">
+
+                    <TextView
+                        android:id="@+id/tv_load_more"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Loading"
+                        android:layout_marginEnd="10dp"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/regular"/>
+
+                    <ProgressBar
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rv_search"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginVertical="5dp" />
+                    </RelativeLayout>
+
+                    <LinearLayout
+                        android:id="@+id/contact_layout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginVertical="20dp"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/iv_playstore"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="5dp"
+                            android:layout_marginBottom="10dp"
+                            android:onClick="openStore"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_playstore"
+                            android:tag="https://play.google.com/store/apps/dev?id=6258518222272137551" />
+
+                        <ImageView
+                            android:id="@+id/iv_gmail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="5dp"
+                            android:layout_marginBottom="10dp"
+                            android:onClick="openEmail"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_gmail"
+                            android:tag="sodukle@gmail.com" />
+
+                        <ImageView
+                            android:id="@+id/iv_instagram"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="5dp"
+                            android:layout_marginBottom="10dp"
+                            android:onClick="openInsta"
+                            android:padding="10dp"
+                            android:src="@drawable/ic_instagram"
+                            android:tag="https://www.instagram.com/odukle.jpg/" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+        </LinearLayout>
+
+
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</layout>
