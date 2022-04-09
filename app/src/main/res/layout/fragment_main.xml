@@ -25,6 +25,34 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone"
+                android:id="@+id/layout_nsfw"
+                android:background="@color/black">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/tv_nsfw"
+                    android:text="Warning: This video contains NSFW material"
+                    android:textAlignment="center"
+                    android:layout_marginHorizontal="20dp"
+                    android:fontFamily="@font/regular"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/btn_watch_anyway"
+                    android:text="Watch anyway"
+                    android:backgroundTint="@color/cardview_dark_background"
+                    app:cornerRadius="10dp"
+                    android:layout_marginTop="10dp"/>
+            </LinearLayout>
+
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

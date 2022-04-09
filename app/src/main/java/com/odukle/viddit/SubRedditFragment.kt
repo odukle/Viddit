@@ -95,6 +95,7 @@ class SubRedditFragment : Fragment() {
                         populateRV(order)
                         chipGroupTime.visibility = View.GONE
                         chipGroupTime.clearCheck()
+                        chipTop.text = "Top"
                     }
                 }
             }

@@ -245,6 +245,14 @@ class VideoAdapter(
         }
 
         ///////////////////////////////////////////////////////////////////////////
+
+        if (post.thumbnail == "nsfw") {
+            fragment.binder.apply {
+                layoutNsfw.visibility = View.VISIBLE
+                holder.player.pause()
+            }
+        }
+
         attachedHolder = holder
         val lastPost = unShuffledList[itemCount - 1]
         if (holder.absoluteAdapterPosition == 0 || playWhenReady) holder.player.play()

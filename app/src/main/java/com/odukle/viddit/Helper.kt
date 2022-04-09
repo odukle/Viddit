@@ -108,11 +108,14 @@ class Helper {
             /////////////////////////////////////////////////////////////////////////////////////SET VISIBILITIES
 
             val vList = mutableListOf<Video>()
+            "restrict_sr=true&include_over_18=on"
             val url = Uri.parse("https://www.reddit.com/$subreddit/$order/.json")
                 .buildUpon()
                 .appendQueryParameter("limit", "100")
                 .appendQueryParameter("after", after)
                 .appendQueryParameter("t", time)
+                .appendQueryParameter("restrict_sr", "true")
+                .appendQueryParameter("include_over_18", "on")
                 .toString()
             try {
                 val client = OkHttpClient()
@@ -443,7 +446,7 @@ class Helper {
             try {
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("https://www.reddit.com/subreddits/search.json?q=$query")
+                    .url("https://www.reddit.com/subreddits/search.json?q=$query&restrict_sr=true&include_over_18=on")
                     .get()
                     .build()
 
