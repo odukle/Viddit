@@ -108,7 +108,6 @@ class Helper {
             /////////////////////////////////////////////////////////////////////////////////////SET VISIBILITIES
 
             val vList = mutableListOf<Video>()
-            "restrict_sr=true&include_over_18=on"
             val url = Uri.parse("https://www.reddit.com/$subreddit/$order/.json")
                 .buildUpon()
                 .appendQueryParameter("limit", "100")
