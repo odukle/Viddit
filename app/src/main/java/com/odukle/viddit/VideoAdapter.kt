@@ -67,6 +67,7 @@ class VideoAdapter(
     private var mute = false
     val unShuffledList = mutableListOf<Video>()
     var playWhenReady = false
+    private var allowPlay = true
 
     init {
         unShuffledList.addAll(list)
@@ -173,15 +174,19 @@ class VideoAdapter(
                 }
             }
 
-            ///////////////////////////////////////////////////////// SET ON CLICK LISTENERS
+            ////////////////////////////////////////////////////////////////// SET ON CLICK LISTENERS
+
+            //// controller visibility listener
             playerView.setControllerVisibilityListener {
                 if (it == View.VISIBLE) {
                     fragment.binder.layoutToolbar.visibility = View.VISIBLE
                     btnTogglePlay.visibility = View.VISIBLE
+                    if (post.nsfw != null && nsfwAllowed()) uncheckNsfw.visibility = View.VISIBLE
                     btnMute.visibility = View.VISIBLE
                 } else {
                     fragment.binder.layoutToolbar.visibility = View.GONE
                     btnTogglePlay.visibility = View.GONE
+                    uncheckNsfw.visibility = View.GONE
                     btnMute.visibility = View.GONE
                 }
             }
@@ -211,6 +216,23 @@ class VideoAdapter(
                     val customTabsIntent = CustomTabsIntent.Builder().build()
                     customTabsIntent.launchUrl(main, Uri.parse(post.permalink))
                 }
+            }
+
+            btnWatchAnyway.setOnClickListener {
+                layoutNsfw.visibility = View.GONE
+                holder.player.play()
+                if (checkNsfw.isChecked) {
+                    allowNSFW()
+                }
+            }
+
+            uncheckNsfw.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    doNotAllowNSFW()
+                    checkNsfw.isChecked = false
+                    layoutNsfw.visibility = View.VISIBLE
+                    holder.player.pause()
+                } else allowNSFW()
             }
         }
     }
@@ -246,16 +268,18 @@ class VideoAdapter(
 
         ///////////////////////////////////////////////////////////////////////////
 
-        if (post.thumbnail == "nsfw") {
-            fragment.binder.apply {
-                layoutNsfw.visibility = View.VISIBLE
-                holder.player.pause()
-            }
+        if (post.nsfw != null && !nsfwAllowed()) {
+            holder.binder.layoutNsfw.visibility = View.VISIBLE
+            allowPlay = false
+        } else {
+            holder.binder.layoutNsfw.visibility = View.GONE
+            if (post.nsfw != null) holder.binder.playerView.performClick()
+            allowPlay = true
         }
 
         attachedHolder = holder
         val lastPost = unShuffledList[itemCount - 1]
-        if (holder.absoluteAdapterPosition == 0 || playWhenReady) holder.player.play()
+        if ((holder.absoluteAdapterPosition == 0 || playWhenReady) && allowPlay) holder.player.play()
         tempPlayer = currentPlayer
         currentPlayer = holder.player
 
@@ -328,7 +352,7 @@ class VideoAdapter(
         }
 
         try {
-            currentPlayer?.play()
+            if (allowPlay) currentPlayer?.play()
         } catch (e: Exception) {
         }
         holder.player.apply {

@@ -264,6 +264,16 @@
                             android:layout_marginVertical="5dp" />
                     </RelativeLayout>
 
+                    <Switch
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Allow NSFW content"
+                        android:id="@+id/switch_nsfw"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="20dp"
+                        android:fontFamily="@font/regular"
+                        android:switchPadding="8dp"/>
+
                     <LinearLayout
                         android:id="@+id/contact_layout"
                         android:layout_width="wrap_content"

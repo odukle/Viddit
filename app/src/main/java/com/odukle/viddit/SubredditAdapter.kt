@@ -43,9 +43,13 @@ class SubredditAdapter(
     override fun onBindViewHolder(holder: SRViewHolder, position: Int) {
         try {
             val post = list[position]
+
+
             holder.binder.apply {
+                val thumbnail = post.nsfw ?: post.thumbnail
+
                 Glide.with(root)
-                    .load(post.thumbnail)
+                    .load(thumbnail)
                     .centerCrop()
                     .addListener(imageLoadingListener(this))
                     .into(ivThumb)

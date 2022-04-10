@@ -1,6 +1,7 @@
 package com.odukle.viddit
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +26,7 @@ class SearchFragment : Fragment() {
     lateinit var binder: FragmentSearchBinding
     var adapter: SearchAdapter? = null
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -32,14 +34,15 @@ class SearchFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         binder = DataBindingUtil.inflate(inflater, R.layout.fragment_search, container, false)
+        sf = this
         init()
         return binder.root
     }
 
     private fun init() {
-
+        Log.d(TAG, "init: called")
         binder.apply {
             if (searchAdapter != null) {
                 rvSearch.adapter = searchAdapter
@@ -196,6 +199,17 @@ class SearchFragment : Fragment() {
                     }
                 }
             }
+
+            switchNsfw.isChecked = nsfwAllowed()
+            switchNsfw.setOnCheckedChangeListener { buttonView, isChecked ->
+                if (isChecked) {
+                    allowNSFW()
+                    if (!etSearch.text.isNullOrEmpty())  btnSearch.performClick()
+                } else {
+                    doNotAllowNSFW()
+                    if (!etSearch.text.isNullOrEmpty())  btnSearch.performClick()
+                }
+            }
         }
     }
 
@@ -211,5 +225,7 @@ class SearchFragment : Fragment() {
                 arguments = Bundle().apply {
                 }
             }
+
+        lateinit var sf: SearchFragment
     }
 }

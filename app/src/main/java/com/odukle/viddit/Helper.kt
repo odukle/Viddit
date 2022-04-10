@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
@@ -29,6 +30,7 @@ import java.util.*
 
 
 private const val TAG = "Helper"
+val NSFW = "nsfw"
 
 fun Float.toDp(): Int {
     return TypedValue.applyDimension(
@@ -39,7 +41,10 @@ fun Float.toDp(): Int {
 }
 
 fun Runnable.runAfter(ms: Long) {
-    Helper.handler.postDelayed(this, ms)
+    val handler = Handler(Looper.getMainLooper())
+    handler.postDelayed(
+        this,
+        ms)
 }
 
 fun Long.toTimeAgo(): String {
@@ -59,9 +64,13 @@ fun RecyclerView?.getCurrentPosition(): Int {
     return (this?.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
 }
 
-fun log(c: Class<Any>, method: Function<Any> ,text: String) {
+fun log(c: Class<Any>, method: Function<Any>, text: String) {
     Log.d(c::class.simpleName, "$method: $text")
 }
+
+fun nsfwAllowed(): Boolean = main.sharedPreferences.getBoolean(NSFW, false)
+fun doNotAllowNSFW() = main.sharedPreferences.edit().putBoolean(NSFW, false).apply()
+fun allowNSFW() = main.sharedPreferences.edit().putBoolean(NSFW, true).apply()
 
 class Helper {
     companion object {
@@ -77,7 +86,6 @@ class Helper {
         lateinit var tempPermalink: String
         lateinit var tempVideoUrl: String
         lateinit var tempName: String
-        lateinit var handler: Handler
 
         ////////////////////////////////////////////////////////Adapters
         var videoAdapter: VideoAdapter? = null
@@ -108,19 +116,20 @@ class Helper {
             /////////////////////////////////////////////////////////////////////////////////////SET VISIBILITIES
 
             val vList = mutableListOf<Video>()
-            val url = Uri.parse("https://www.reddit.com/$subreddit/$order/.json")
+            val uri = Uri.parse("https://www.reddit.com/$subreddit/$order/.json")
                 .buildUpon()
                 .appendQueryParameter("limit", "100")
                 .appendQueryParameter("after", after)
                 .appendQueryParameter("t", time)
-                .appendQueryParameter("restrict_sr", "true")
+
+            if (nsfwAllowed()) uri.appendQueryParameter("restrict_sr", "true")
                 .appendQueryParameter("include_over_18", "on")
-                .toString()
+
             try {
                 val client = OkHttpClient()
                 subreddit.replace(" ", "")
                 val request = Request.Builder()
-                    .url(url)
+                    .url(uri.toString())
                     .get()
                     .build()
 
@@ -204,6 +213,20 @@ class Helper {
                         "null"
                     }
 
+                    val nsfw = try {
+                        post["preview"]
+                            .asJsonObject["images"]
+                            .asJsonArray[0]
+                            .asJsonObject["variants"]
+                            .asJsonObject["nsfw"]
+                            .asJsonObject["source"]
+                            .asJsonObject["url"]
+                            .asString
+                            .replace("amp;", "")
+                    } catch (e: Exception) {
+                        null
+                    }
+
                     val gif = try {
                         post["preview"]
                             .asJsonObject["images"]
@@ -213,7 +236,7 @@ class Helper {
                             .asJsonObject["source"]
                             .asJsonObject["url"]
                             .asString
-                            .replace("amp;s", "s")
+                            .replace("amp;", "")
                     } catch (e: Exception) {
                         "null"
                     }
@@ -242,6 +265,7 @@ class Helper {
                                 video,
                                 videoDownloadUrl,
                                 thumbnail,
+                                nsfw,
                                 gif,
                                 permalink
                             )
@@ -442,10 +466,11 @@ class Helper {
         suspend fun getSubreddits(query: String) = withContext(IO) {
             Log.d(TAG, "getSubreddits: called")
             val rList = mutableListOf<Pair<String, String>>()
+            val strNsfw = if (nsfwAllowed()) "&restrict_sr=true&include_over_18=on" else ""
             try {
                 val client = OkHttpClient()
                 val request = Request.Builder()
-                    .url("https://www.reddit.com/subreddits/search.json?q=$query&restrict_sr=true&include_over_18=on")
+                    .url("https://www.reddit.com/subreddits/search.json?q=$query&$strNsfw")
                     .get()
                     .build()
 

@@ -116,10 +116,6 @@ class MainFragment : Fragment() {
                 populateRV(false, refresh = true)
             }
 
-            btnWatchAnyway.setOnClickListener {
-                layoutNsfw.visibility = View.GONE
-            }
-
             refreshLayout.setProgressViewOffset(false, 60F.toDp(), 100F.toDp())
 
         }

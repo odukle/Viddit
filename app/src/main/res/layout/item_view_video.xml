@@ -228,6 +228,18 @@
             android:src="@drawable/ic_pause"
             android:layout_centerInParent="true"/>
 
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/uncheck_nsfw"
+            android:text="Do not play NSFW content"
+            android:textColor="@color/white"
+            style="@style/TextViewShadow"
+            android:fontFamily="@font/regular"
+            android:visibility="gone"
+            android:layout_below="@id/btn_toggle_play"
+            android:layout_centerHorizontal="true"/>
+
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -239,5 +251,40 @@
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="30dp"
             android:src="@drawable/ic_volume"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            android:id="@+id/layout_nsfw"
+            android:background="@color/black">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/tv_nsfw"
+                android:text="Warning: This video contains NSFW material"
+                android:textAlignment="center"
+                android:layout_marginHorizontal="20dp"
+                android:fontFamily="@font/regular"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btn_watch_anyway"
+                android:text="Watch anyway"
+                android:backgroundTint="@color/cardview_dark_background"
+                app:cornerRadius="10dp"
+                android:layout_marginTop="10dp"/>
+
+            <com.google.android.material.checkbox.MaterialCheckBox
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/check_nsfw"
+                android:text="Do not ask again"
+                android:fontFamily="@font/regular"/>
+        </LinearLayout>
     </RelativeLayout>
 </layout>

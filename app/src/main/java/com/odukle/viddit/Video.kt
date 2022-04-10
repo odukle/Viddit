@@ -20,6 +20,7 @@ class Video(
     val video: String,
     val videoDownloadUrl: String,
     val thumbnail: String,
+    val nsfw: String?,
     val gif: String,
     val permalink: String,
 ) : Parcelable
