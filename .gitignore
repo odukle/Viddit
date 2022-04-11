@@ -1,4 +1,6 @@
 *.iml
+*.apk
+*.aab
 .gradle
 /local.properties
 /.idea/caches
@@ -13,3 +15,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Files for the ART/Dalvik VM
+*.dex
+# Java class files
+*.class
+/app/release/
