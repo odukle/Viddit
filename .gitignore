@@ -21,3 +21,4 @@ local.properties
 # Java class files
 *.class
 /app/release/
+app/build.gradle
