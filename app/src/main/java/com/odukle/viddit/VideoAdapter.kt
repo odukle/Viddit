@@ -74,7 +74,9 @@ class VideoAdapter(
         Runnable {
             if (fragment.rvPosition > itemCount / 2) {
                 CoroutineScope(IO).launch {
-                    loadMoreData(unShuffledList[itemCount - 1].name)
+                    try {
+                        loadMoreData(unShuffledList[itemCount - 1].name)
+                    } catch (e: Exception) {}
                 }
             }
         }.runAfter(500)
