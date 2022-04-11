@@ -12,6 +12,8 @@
 .DS_Store
 /build
 /captures
+/app/release/
+app/build.gradle
 .externalNativeBuild
 .cxx
 local.properties
@@ -20,5 +22,3 @@ local.properties
 *.dex
 # Java class files
 *.class
-/app/release/
-app/build.gradle
