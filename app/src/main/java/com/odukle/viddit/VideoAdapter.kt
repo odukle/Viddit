@@ -1,5 +1,6 @@
 package com.odukle.viddit
 
+import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
@@ -19,6 +20,9 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.core.view.children
+import androidx.core.view.get
+import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -71,15 +75,16 @@ class VideoAdapter(
 
     init {
         unShuffledList.addAll(list)
-        Runnable {
+        runAfter(500) {
             if (fragment.rvPosition > itemCount / 2) {
                 CoroutineScope(IO).launch {
                     try {
                         loadMoreData(unShuffledList[itemCount - 1].name)
-                    } catch (e: Exception) {}
+                    } catch (e: Exception) {
+                    }
                 }
             }
-        }.runAfter(500)
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
@@ -392,6 +397,9 @@ class VideoAdapter(
     }
 
     fun shuffle() {
+        Log.d(TAG, "shuffle: called")
+        Log.d(TAG, "shuffle: ${list.size}")
+        Log.d(TAG, "shuffle: ${unShuffledList.size}")
         list.shuffle()
         notifyItemRangeChanged(0, itemCount)
     }
@@ -453,7 +461,7 @@ class VideoAdapter(
                 params.setMargins(10, 10, 10, 10)
                 childLayout2.layoutParams = params
 
-                addCommentView(commentsArray, 10F, fragment.commentsBinder.commentsLayout)
+                addCommentView(commentsArray, 10F, fragment.commentsBinder.commentsLayout, true)
             }
 
             withContext(Main) {
@@ -462,10 +470,11 @@ class VideoAdapter(
         }
     }
 
-    private fun addCommentView(commentsArray: JsonArray?, margin: Float, parentLayout: LinearLayout) {
+    private fun addCommentView(commentsArray: JsonArray?, margin: Float, parentLayout: LinearLayout, isMainLayout: Boolean = false) {
         commentsArray?.forEach { comment ->
-
+            var replies: JsonArray? = null
             val layout = LinearLayout(main)
+            layout.layoutTransition = LayoutTransition()
             layout.orientation = LinearLayout.VERTICAL
             val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
 
@@ -544,7 +553,9 @@ class VideoAdapter(
                     ll.addView(iv)
                     ll.addView(tvAuthor)
 
-                    if (author.lowercase() != "automoderator") layout.addView(ll)
+                    if (author.lowercase() != "automoderator" && !author.lowercase().endsWith("bot")) {
+                        layout.addView(ll)
+                    }
                 }
 
                 if (body != "null") {
@@ -555,7 +566,35 @@ class VideoAdapter(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         tvBody.typeface = main.resources.getFont(R.font.bold)
                     }
-                    if (author.lowercase() != "automoderator") layout.addView(tvBody)
+                    if (author.lowercase() != "automoderator" && !author.lowercase().endsWith("bot")) {
+                        layout.addView(tvBody)
+                    }
+
+                    tvBody.setOnLongClickListener {
+                        layout.children.forEach { child ->
+                            if (layout.indexOfChild(child) > 1
+                                && layout.childCount > 3
+                                && layout.indexOfChild(child) != layout.childCount - 1
+                            ) {
+                                try {
+                                    child.apply {
+                                        visibility = if (isVisible) {
+                                            (layout[layout.childCount - 1] as TextView).text = "Show replies..."
+                                            (layout[layout.childCount - 1] as TextView).setTextColor(main.getColor(android.R.color.holo_green_light))
+                                            View.GONE
+                                        } else {
+                                            (layout[layout.childCount - 1] as TextView).text = "Hide replies"
+                                            (layout[layout.childCount - 1] as TextView).setTextColor(main.getColor(android.R.color.holo_red_dark))
+                                            View.VISIBLE
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                }
+                            }
+                        }
+
+                        true
+                    }
                 }
 
                 if (score != "null") {
@@ -566,11 +605,13 @@ class VideoAdapter(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         tvScore.typeface = main.resources.getFont(R.font.bold)
                     }
-                    if (author.lowercase() != "automoderator") layout.addView(tvScore)
+                    if (author.lowercase() != "automoderator" && !author.lowercase().endsWith("bot")) {
+                        layout.addView(tvScore)
+                    }
                 }
 
                 /////////////////////////////////////////////////////
-                val replies = try {
+                replies = try {
                     data["replies"].asJsonObject["data"].asJsonObject["children"].asJsonArray
                 } catch (e: java.lang.Exception) {
                     null
@@ -578,7 +619,36 @@ class VideoAdapter(
 
                 addCommentView(replies, 20F, layout)
             }
-        }
 
+            if (replies != null) {
+                if (!isMainLayout) {
+                    val tv = TextView(main)
+                    tv.setPadding(px, px, 0, 0)
+                    tv.text = "Hide replies"
+                    tv.textSize = 12F
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        tv.typeface = main.resources.getFont(R.font.bold_italic)
+                    }
+                    tv.setTextColor(main.getColor(android.R.color.holo_red_light))
+
+                    parentLayout.addView(tv)
+
+                    tv.setOnClickListener {
+                        layout.apply {
+                            visibility = if (isVisible) {
+                                tv.text = "Show replies..."
+                                tv.setTextColor(main.getColor(android.R.color.holo_green_light))
+                                View.GONE
+                            } else {
+                                tv.text = "Hide replies"
+                                tv.setTextColor(main.getColor(android.R.color.holo_red_light))
+                                View.VISIBLE
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
     }
 }

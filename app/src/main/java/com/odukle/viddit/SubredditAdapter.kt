@@ -48,11 +48,13 @@ class SubredditAdapter(
             holder.binder.apply {
                 val thumbnail = post.nsfw ?: post.thumbnail
 
-                Glide.with(root)
-                    .load(thumbnail)
-                    .centerCrop()
-                    .addListener(imageLoadingListener(this))
-                    .into(ivThumb)
+                if (thumbnail.isNotEmpty()) {
+                    Glide.with(root)
+                        .load(thumbnail)
+                        .centerCrop()
+                        .addListener(imageLoadingListener(this))
+                        .into(ivThumb)
+                }
 
                 //////////////////////////////////////////////////////SOCL
                 ivThumb.setOnClickListener {
@@ -91,11 +93,9 @@ class SubredditAdapter(
                             withContext(Dispatchers.Main) {
                                 fragment.binder.cardLoadMore.animate().translationY(500f).duration = 500
 
-                                Runnable {
-                                    main.runOnUiThread {
-                                        fragment.binder.cardLoadMore.visibility = View.GONE
-                                    }
-                                }.runAfter(500)
+                                runAfter(500) {
+                                    fragment.binder.cardLoadMore.visibility = View.GONE
+                                }
                             }
                         }
                     }

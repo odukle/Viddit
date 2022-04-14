@@ -64,11 +64,9 @@ class SearchFragment : Fragment() {
                             rvSearch.adapter = adapter
                             rvSearch.layoutManager = CustomLLM(main)
                             cardLoading.animate().translationY(-500f).duration = 500
-                            kotlinx.coroutines.Runnable {
-                                main.runOnUiThread {
-                                    cardLoading.visibility = View.GONE
-                                }
-                            }.runAfter(500)
+                            runAfter(500) {
+                                cardLoading.visibility = View.GONE
+                            }
                             contactLayout.visibility = View.VISIBLE
                         }
                     }
@@ -96,11 +94,9 @@ class SearchFragment : Fragment() {
                         rvSearch.layoutManager = CustomLLM(main)
                         cardLoading.animate().translationY(-500f).duration = 500
 
-                        Runnable {
-                            main.runOnUiThread {
-                                cardLoading.visibility = View.GONE
-                            }
-                        }.runAfter(500)
+                        runAfter(500) {
+                            cardLoading.visibility = View.GONE
+                        }
 
                         v.clearFocus()
                         tvQuery.text = "Search results"
@@ -130,11 +126,9 @@ class SearchFragment : Fragment() {
 
                     if (searchAdapter != null && searchAdapter!!.query == query) {
 
-                        Runnable {
-                            main.runOnUiThread {
-                                scrollViewChips.smoothScrollTo((chip.x / 1.5).toInt(), 0)
-                            }
-                        }.runAfter(500)
+                        runAfter(500) {
+                            scrollViewChips.smoothScrollTo((chip.x / 1.5).toInt(), 0)
+                        }
 
                         return@setOnCheckedChangeListener
                     }
@@ -152,11 +146,9 @@ class SearchFragment : Fragment() {
                             rvSearch.layoutManager = CustomLLM(main)
                             cardLoading.animate().translationY(-500f).duration = 500
 
-                            Runnable {
-                                main.runOnUiThread {
-                                    cardLoading.visibility = View.GONE
-                                }
-                            }.runAfter(500)
+                            runAfter(500) {
+                                cardLoading.visibility = View.GONE
+                            }
 
                         }
                     }
@@ -186,11 +178,9 @@ class SearchFragment : Fragment() {
                                 rvSearch.layoutManager = CustomLLM(main)
                                 cardLoading.animate().translationY(-500f).duration = 500
 
-                                Runnable {
-                                    main.runOnUiThread {
-                                        cardLoading.visibility = View.GONE
-                                    }
-                                }.runAfter(500)
+                                runAfter(500) {
+                                    cardLoading.visibility = View.GONE
+                                }
 
                             }
                         }

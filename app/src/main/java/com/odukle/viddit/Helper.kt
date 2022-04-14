@@ -40,10 +40,10 @@ fun Float.toDp(): Int {
     ).toInt()
 }
 
-fun Runnable.runAfter(ms: Long) {
+fun runAfter(ms: Long, block: () -> Unit) {
     val handler = Handler(Looper.getMainLooper())
     handler.postDelayed(
-        this,
+        block,
         ms)
 }
 
@@ -516,7 +516,8 @@ class Helper {
                 override fun onLoadFailed(@Nullable e: GlideException?, model: Any?, target: Target<Drawable?>?, isFirstResource: Boolean): Boolean {
                     binder.progressThumb.visibility = View.GONE
                     binder.ivPlay.visibility = View.VISIBLE
-                    return false
+                    binder.ivThumb.setImageResource(android.R.drawable.ic_menu_report_image)
+                    return true
                 }
 
                 override fun onResourceReady(

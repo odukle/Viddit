@@ -1,6 +1,7 @@
 package com.odukle.viddit
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -61,9 +62,9 @@ class MainFragment : Fragment() {
     }
 
     private fun init() {
+        Log.d(TAG, "init: called")
         videoList.clear()
         currentPlayer = null
-
         pool = object : ExoPool {
             override fun acquire(): ExoPlayer {
                 val trackSelector = DefaultTrackSelector(main).apply {
@@ -89,11 +90,9 @@ class MainFragment : Fragment() {
                 if (position <= 10) vpViddit.smoothScrollToPosition(0)
                 else {
                     vpViddit.smoothScrollToPosition(position - 10)
-                    Runnable {
-                        main.runOnUiThread {
-                            vpViddit.scrollToPosition(0)
-                        }
-                    }.runAfter(1000)
+                    runAfter(1000) {
+                        vpViddit.scrollToPosition(0)
+                    }
                 }
             }
 
@@ -109,6 +108,7 @@ class MainFragment : Fragment() {
             }
 
             ivReload.setOnClickListener {
+                Log.d(TAG, "init: clicked")
                 populateRV(true, refresh = false)
             }
 
@@ -132,11 +132,9 @@ class MainFragment : Fragment() {
                 vpViddit.adapter = adapter
                 vpViddit.layoutManager = CustomLLM(main)
                 if (calledFor == FOR_SUBREDDIT) {
-                    Runnable {
-                        main.runOnUiThread {
-                            vpViddit.scrollToPosition(rvPosition)
-                        }
-                    }.runAfter(200)
+                    runAfter(200) {
+                        vpViddit.scrollToPosition(rvPosition)
+                    }
                 }
                 refreshLayout.isRefreshing = false
             }
@@ -156,24 +154,26 @@ class MainFragment : Fragment() {
                         }
 
                         if (!doShuffle && !refresh) {
+                            Log.d(TAG, "populateRV: first")
                             vpViddit.adapter = adapter   //Called for the first time so attach adapter right away to reduce waiting time
                             videoAdapter = adapter
                             adapter.playWhenReady = calledFor != FOR_MAIN
                             snapHelper.attachToRecyclerView(vpViddit)
                             vpViddit.layoutManager = CustomLLM(main)
-//                            vpViddit.scrollToPosition(rvPosition)
                             adapter.loadMoreData(lastPost, doShuffle)
                             refreshLayout.isRefreshing = false
                         } else {
-                            if (doShuffle) videoAdapter?.shuffle()                                             //shuffle
-                            videoAdapter?.loadMoreData(lastPost, doShuffle, refresh = refresh) // called by reload or shuffle button
+                            val vpAdapter = vpViddit.adapter as VideoAdapter
+                            if (doShuffle) vpAdapter.shuffle()                                             //shuffle
+                            vpAdapter.loadMoreData(lastPost, doShuffle, refresh = refresh) // called by reload or shuffle button
                             if (refresh) {
-                                videoAdapter?.list?.clear()
-                                videoAdapter?.unShuffledList?.let { videoAdapter?.list?.addAll(it) }
-                                vpViddit.adapter?.notifyDataSetChanged()
+                                Log.d(TAG, "populateRV: is refresh")
+                                vpAdapter.list.clear()
+                                vpAdapter.unShuffledList.let { vpAdapter.list.addAll(it) }
+                                vpAdapter.notifyDataSetChanged()
+                                vpAdapter.shuffle()
                             }
-                            videoAdapter?.playWhenReady = calledFor != FOR_MAIN
-//                            if (!doShuffle) vpViddit.scrollToPosition(rvPosition)
+                            vpAdapter.playWhenReady = calledFor != FOR_MAIN
                             refreshLayout.isRefreshing = false
                         }
                     }
@@ -197,8 +197,8 @@ class MainFragment : Fragment() {
     override fun onPause() {
         if (calledFor == FOR_MAIN) {
             videoAdapter = try {
-                videoAdapterForMain = adapter
-                adapter
+                videoAdapterForMain = binder.vpViddit.adapter as VideoAdapter
+                binder.vpViddit.adapter as VideoAdapter
             } catch (e: Exception) {
                 null
             }

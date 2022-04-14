@@ -66,11 +66,9 @@ class SubRedditFragment : Fragment() {
                 rvSubreddit.layoutManager = GridLayoutManager(requireContext(), 3)
                 cardLoadMore.animate().translationY(500f).duration = 500
 
-                Runnable {
-                    main.runOnUiThread {
-                        cardLoadMore.visibility = View.GONE
-                    }
-                }.runAfter(500)
+                runAfter(500) {
+                    cardLoadMore.visibility = View.GONE
+                }
 
             } else {
                 populateRV()
@@ -125,11 +123,9 @@ class SubRedditFragment : Fragment() {
             binder.rvSubreddit.adapter?.notifyItemRangeInserted(oldSize, newSize - oldSize)
             binder.cardLoadMore.animate().translationY(500f).duration = 500
 
-            Runnable {
-                main.runOnUiThread {
-                    binder.cardLoadMore.visibility = View.GONE
-                }
-            }.runAfter(500)
+            runAfter(500) {
+                binder.cardLoadMore.visibility = View.GONE
+            }
         } else {
             binder.rvSubreddit.adapter?.notifyDataSetChanged()
         }
@@ -166,11 +162,9 @@ class SubRedditFragment : Fragment() {
                                 rvSubreddit.layoutManager = CustomGLM(requireContext(), 3)
                                 cardLoadMore.animate().translationY(500f).duration = 500
 
-                                Runnable {
-                                    main.runOnUiThread {
-                                        cardLoadMore.visibility = View.GONE
-                                    }
-                                }.runAfter(500)
+                                runAfter(500) {
+                                    cardLoadMore.visibility = View.GONE
+                                }
 
                             } catch (e: Exception) {
                             }
@@ -180,11 +174,9 @@ class SubRedditFragment : Fragment() {
                             tvNoVideos.visibility = View.VISIBLE
                             cardLoadMore.animate().translationY(500f).duration = 500
 
-                            Runnable {
-                                main.runOnUiThread {
-                                    cardLoadMore.visibility = View.GONE
-                                }
-                            }.runAfter(500)
+                            runAfter(500) {
+                                cardLoadMore.visibility = View.GONE
+                            }
                         }
                     }
                 }
