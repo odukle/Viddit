@@ -515,6 +515,7 @@ class Helper {
             return object : RequestListener<Drawable?> {
                 override fun onLoadFailed(@Nullable e: GlideException?, model: Any?, target: Target<Drawable?>?, isFirstResource: Boolean): Boolean {
                     binder.progressThumb.visibility = View.GONE
+                    binder.ivPlay.visibility = View.VISIBLE
                     return false
                 }
 
