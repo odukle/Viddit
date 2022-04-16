@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.odukle.viddit.Helper.Companion.FOR_MAIN
 import com.odukle.viddit.Helper.Companion.currentPlayer
 import com.odukle.viddit.Helper.Companion.tempName
@@ -18,11 +19,13 @@ import com.odukle.viddit.Helper.Companion.tempVideoUrl
 import com.odukle.viddit.Helper.Companion.videoList
 import com.odukle.viddit.databinding.ActivityMainBinding
 
+
 class MainActivity : AppCompatActivity() {
 
     lateinit var binder: ActivityMainBinding
     lateinit var sharedPreferences: SharedPreferences
     private lateinit var toast: Toast
+    private lateinit var mFirebaseAnalytics: FirebaseAnalytics
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +33,7 @@ class MainActivity : AppCompatActivity() {
         main = this
         toast = Toast(this)
         sharedPreferences = getSharedPreferences("pref", Context.MODE_PRIVATE)
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this)
         init()
     }
 
