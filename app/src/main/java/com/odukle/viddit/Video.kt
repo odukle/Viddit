@@ -7,6 +7,7 @@ import kotlinx.android.parcel.Parcelize
 class Video(
     val title: String,
     val name: String,
+    val id: String,
     val subreddit: String,
     val subredditPrefixed: String,
     val selfText: String,
@@ -22,5 +23,6 @@ class Video(
     val thumbnail: String,
     val nsfw: String?,
     val gif: String,
+    val gifMp4: String,
     val permalink: String,
 ) : Parcelable

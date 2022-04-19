@@ -27,7 +27,9 @@ import com.odukle.viddit.databinding.LayoutCommentsBinding
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import okhttp3.*
 import kotlin.properties.Delegates
+
 
 private const val TAG = "MainFragment"
 
@@ -191,7 +193,6 @@ class MainFragment : Fragment() {
         } else {
             binder.vpViddit.adapter?.notifyDataSetChanged()
         }
-
     }
 
     override fun onPause() {
@@ -208,9 +209,10 @@ class MainFragment : Fragment() {
     }
 
     override fun onResume() {
-        currentPlayer?.play()
         super.onResume()
+        currentPlayer?.play()
     }
+
 
     override fun onDestroyView() {
         currentPlayer?.let { pool.release(it) }

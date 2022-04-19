@@ -5,13 +5,10 @@ import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import androidx.annotation.Nullable
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.load.DataSource
@@ -30,47 +27,6 @@ import java.util.*
 
 
 private const val TAG = "Helper"
-val NSFW = "nsfw"
-
-fun Float.toDp(): Int {
-    return TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP,
-        this,
-        main.resources.displayMetrics
-    ).toInt()
-}
-
-fun runAfter(ms: Long, block: () -> Unit) {
-    val handler = Handler(Looper.getMainLooper())
-    handler.postDelayed(
-        block,
-        ms)
-}
-
-fun Long.toTimeAgo(): String {
-
-    val hr = ((Calendar.getInstance().timeInMillis - this * 1000L) / 3600000L)
-
-    return when (hr) {
-        0L -> ((Calendar.getInstance().timeInMillis - this * 1000L) / 60000L).toString() + "m"
-        in 1 until 24 -> hr.toString() + "h"
-        in 24 until 168 -> (hr / 24).toString() + "d"
-        in 168 until Integer.MAX_VALUE -> (hr / (24 * 7)).toString() + "w"
-        else -> "xxx"
-    }
-}
-
-fun RecyclerView?.getCurrentPosition(): Int {
-    return (this?.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-}
-
-fun log(c: Class<Any>, method: Function<Any>, text: String) {
-    Log.d(c::class.simpleName, "$method: $text")
-}
-
-fun nsfwAllowed(): Boolean = main.sharedPreferences.getBoolean(NSFW, false)
-fun doNotAllowNSFW() = main.sharedPreferences.edit().putBoolean(NSFW, false).apply()
-fun allowNSFW() = main.sharedPreferences.edit().putBoolean(NSFW, true).apply()
 
 class Helper {
     companion object {
@@ -83,9 +39,7 @@ class Helper {
         var subredditAdapter: SubredditAdapter? = null
         var subredditName = ""
         var searchQuery: String? = null
-        lateinit var tempPermalink: String
-        lateinit var tempVideoUrl: String
-        lateinit var tempName: String
+        lateinit var tempPost: Video
 
         ////////////////////////////////////////////////////////Adapters
         var videoAdapter: VideoAdapter? = null
@@ -149,6 +103,11 @@ class Helper {
                     } catch (e: Exception) {
                         "null"
                     }
+                    val id = try {
+                        post["id"].asString
+                    } catch (e: Exception) {
+                        "null"
+                    }
                     val subreddit = try {
                         post["subreddit"].asString
                     } catch (e: Exception) {
@@ -197,7 +156,10 @@ class Helper {
                         "null"
                     }
                     val videoDownloadUrl = try {
-                        post["media"].asJsonObject["reddit_video"].asJsonObject["fallback_url"].asString.replace("amp;", "")
+                        post["media"]
+                            .asJsonObject["reddit_video"]
+                            .asJsonObject["fallback_url"]
+                            .asString.replace("amp;", "")
                     } catch (e: Exception) {
                         "null"
                     }
@@ -240,6 +202,19 @@ class Helper {
                     } catch (e: Exception) {
                         "null"
                     }
+                    val gifmp4 = try {
+                        post["preview"]
+                            .asJsonObject["images"]
+                            .asJsonArray[0]
+                            .asJsonObject["variants"]
+                            .asJsonObject["mp4"]
+                            .asJsonObject["source"]
+                            .asJsonObject["url"]
+                            .asString
+                            .replace("amp;", "")
+                    } catch (e: Exception) {
+                        "null"
+                    }
 
                     val permalink = try {
                         "https://www.reddit.com/" + post["permalink"].asString
@@ -247,11 +222,12 @@ class Helper {
                         "null"
                     }
 
-                    if (isVideo) {
+                    if (isVideo || gif != "null") {
                         vList.add(
                             Video(
                                 title,
                                 name,
+                                id,
                                 subreddit,
                                 subredditPrefixed,
                                 selfText,
@@ -267,6 +243,7 @@ class Helper {
                                 thumbnail,
                                 nsfw,
                                 gif,
+                                gifmp4,
                                 permalink
                             )
                         )

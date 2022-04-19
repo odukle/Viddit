@@ -18,8 +18,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.view.children
 import androidx.core.view.get
 import androidx.core.view.isVisible
@@ -135,10 +135,10 @@ class VideoAdapter(
                         .placeholder(R.drawable.ic_reddit_user)
                         .into(ivUserIcon)
 
-                    shimmerIcon.visibility = View.GONE
-                    ivIcon.visibility = View.VISIBLE
-                    shimmerUserIcon.visibility = View.GONE
-                    ivUserIcon.visibility = View.VISIBLE
+                    shimmerIcon.hide()
+                    ivIcon.show()
+                    shimmerUserIcon.hide()
+                    ivUserIcon.show()
 
                     arrayOf(tvSubreddit, ivIcon).forEach {
                         it.setOnClickListener {
@@ -167,15 +167,13 @@ class VideoAdapter(
                     ivDownload.setOnClickListener {
                         if (main.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
                             Log.d(TAG, "requesting permission")
-                            Helper.tempPermalink = post.permalink
-                            Helper.tempVideoUrl = post.videoDownloadUrl
-                            Helper.tempName = post.name
+                            Helper.tempPost = post
                             main.requestPermissions(
                                 arrayOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE),
                                 111
                             )
                         } else {
-                            startDownloading(post.permalink, post.videoDownloadUrl, post.name)
+                            startDownloading(post)
                         }
                     }
                 }
@@ -185,16 +183,21 @@ class VideoAdapter(
 
             //// controller visibility listener
             playerView.setControllerVisibilityListener {
+                val detailsParams = layoutPostDetails.layoutParams
                 if (it == View.VISIBLE) {
                     fragment.binder.layoutToolbar.visibility = View.VISIBLE
                     btnTogglePlay.visibility = View.VISIBLE
                     if (post.nsfw != null && nsfwAllowed()) uncheckNsfw.visibility = View.VISIBLE
                     btnMute.visibility = View.VISIBLE
+                    (detailsParams as RelativeLayout.LayoutParams).setMargins(20F.toDp(), 0, 20F.toDp(), 80F.toDp())
+                    layoutPostDetails.layoutParams = detailsParams
                 } else {
                     fragment.binder.layoutToolbar.visibility = View.GONE
                     btnTogglePlay.visibility = View.GONE
                     uncheckNsfw.visibility = View.GONE
                     btnMute.visibility = View.GONE
+                    (detailsParams as RelativeLayout.LayoutParams).setMargins(20F.toDp(), 0, 20F.toDp(), 0)
+                    layoutPostDetails.layoutParams = detailsParams
                 }
             }
 
@@ -220,8 +223,25 @@ class VideoAdapter(
 
             arrayOf(ivUpvotes, tvUpvotes).forEach {
                 it.setOnClickListener {
-                    val customTabsIntent = CustomTabsIntent.Builder().build()
-                    customTabsIntent.launchUrl(main, Uri.parse(post.permalink))
+                    val reddit = main.redditHelper.reddit
+                    if (reddit == null) {
+                        currentPlayer?.pause()
+                        main.redditHelper.startSignIn()
+                    } else {
+                        CoroutineScope(IO).launch {
+                            val submission = reddit.submission(post.id)
+                            var voteStr = submission.inspect().vote.name
+                            var voteNum = submission.inspect().vote.ordinal
+                            Log.d(TAG, "onBindViewHolder: $voteStr $voteNum")
+                            //
+                            reddit.submission(post.id).upvote()
+                            //
+                            ivUpvotes.setImageResource(R.drawable.ic_upvote_red)
+                            voteStr = submission.inspect().vote.name
+                            voteNum = submission.inspect().vote.ordinal
+                            Log.d(TAG, "onBindViewHolder: $voteStr $voteNum")
+                        }
+                    }
                 }
             }
 
@@ -255,9 +275,11 @@ class VideoAdapter(
             playerView.controllerAutoShow = false
             playerView.player = null
             playerView.player = player
+            val uri = if (post.gif != "null") post.gifMp4 else post.video
+            val mimeType = if (post.gif != "null") MimeTypes.APPLICATION_MP4 else MimeTypes.APPLICATION_M3U8
             val mediaItem = MediaItem.Builder()
-                .setUri(Uri.parse(post.video))
-                .setMimeType(MimeTypes.APPLICATION_M3U8)
+                .setUri(Uri.parse(uri))
+                .setMimeType(mimeType)
                 .build()
             player.setMediaItem(mediaItem)
             player.prepare()
@@ -327,6 +349,7 @@ class VideoAdapter(
         })
 
         holder.binder.apply {
+
             btnTogglePlay.setOnClickListener {
                 if (player.isPlaying) {
                     player.pause()
@@ -406,10 +429,17 @@ class VideoAdapter(
 
     companion object {
         @SuppressLint("Range")
-        fun startDownloading(permalink: String, fallbackUrl: String, name: String): Long {
+        fun startDownloading(post: Video): Long {
+            val permalink = post.permalink
+            val name = post.name
             main.shortToast("Download started")
-            val audioUrl = fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
-            val url = "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
+            val url = if (post.isVideo) {
+                val fallbackUrl = post.videoDownloadUrl
+                val audioUrl = fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
+                "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
+            } else {
+                post.gif
+            }
 
             val request = DownloadManager.Request(Uri.parse(url))
             request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)

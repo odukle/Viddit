@@ -9,16 +9,17 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.odukle.viddit.Helper.Companion.FOR_MAIN
 import com.odukle.viddit.Helper.Companion.currentPlayer
-import com.odukle.viddit.Helper.Companion.tempName
-import com.odukle.viddit.Helper.Companion.tempPermalink
-import com.odukle.viddit.Helper.Companion.tempVideoUrl
+import com.odukle.viddit.Helper.Companion.tempPost
 import com.odukle.viddit.Helper.Companion.videoList
 import com.odukle.viddit.databinding.ActivityMainBinding
+import net.dean.jraw.RedditClient
 
+private const val TAG = "MainActivity"
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,20 +27,29 @@ class MainActivity : AppCompatActivity() {
     lateinit var sharedPreferences: SharedPreferences
     private lateinit var toast: Toast
     private lateinit var mFirebaseAnalytics: FirebaseAnalytics
+    lateinit var reddit: RedditClient
+    //
+    var redditHelper = RedditHelper()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        init()
+    }
+
+    private fun init() {
+        ////initialize vars
         binder = DataBindingUtil.setContentView(this, R.layout.activity_main)
         main = this
         toast = Toast(this)
         sharedPreferences = getSharedPreferences("pref", Context.MODE_PRIVATE)
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this)
-        init()
-    }
-
-    private fun init() {
+        //
+        redditHelper.init()
+        //
         videoList.clear()
         currentPlayer = null
+
+        ////
         val fragmentTxn = supportFragmentManager.beginTransaction()
         fragmentTxn.replace(R.id.container, MainFragment.newInstance("r/popular", "", 0, FOR_MAIN))
         fragmentTxn.commit()
@@ -68,10 +78,14 @@ class MainActivity : AppCompatActivity() {
     override fun onBackPressed() {
 
         val count = supportFragmentManager.backStackEntryCount
-        if (count == 0) {
-            finish()
+        if (binder.browserLayout.isVisible) {
+            binder.browserLayout.hide()
         } else {
-            supportFragmentManager.popBackStack()
+            if (count == 0) {
+                finish()
+            } else {
+                supportFragmentManager.popBackStack()
+            }
         }
     }
 
@@ -84,13 +98,19 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             111 -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    VideoAdapter.startDownloading(tempPermalink, tempVideoUrl, tempName)
+                    VideoAdapter.startDownloading(tempPost)
                 } else {
                     shortToast("Permission denied")
                 }
             }
 
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        redditHelper.onOAuthResult(intent)
     }
 
     companion object {
