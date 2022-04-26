@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.google.android.material.chip.Chip
+import com.google.android.material.snackbar.Snackbar
 import com.odukle.viddit.Helper.Companion.backstack
 import com.odukle.viddit.Helper.Companion.isOnline
 import com.odukle.viddit.MainActivity.Companion.main
@@ -14,12 +16,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 
-class SearchAdapter(private val list: List<Pair<String, String>>,private val fragment: SearchFragment, var query: String): RecyclerView.Adapter<SearchAdapter.SearchViewHolder>() {
+class SearchAdapter(
+    private val list: List<Pair<String, String>>,
+    private val fragment: SearchFragment,
+    var query: String,
+    private val addOrRemove: String = ADD
+) :
+    RecyclerView.Adapter<SearchAdapter.SearchViewHolder>() {
 
-    inner class SearchViewHolder(val binder: ItemViewSearchBinding): RecyclerView.ViewHolder(binder.root)
+    inner class SearchViewHolder(val binder: ItemViewSearchBinding) : RecyclerView.ViewHolder(binder.root)
+
+    var calledFor = MAIN_FEED
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SearchViewHolder {
-        val binder  = DataBindingUtil.inflate<ItemViewSearchBinding>(
+        val binder = DataBindingUtil.inflate<ItemViewSearchBinding>(
             LayoutInflater.from(parent.context),
             R.layout.item_view_search,
             parent,
@@ -38,6 +48,7 @@ class SearchAdapter(private val list: List<Pair<String, String>>,private val fra
                 .into(ivIcon)
 
             tvSubredditName.text = pair.second
+            if (addOrRemove == REMOVE) chipAddOrRemove.text = REMOVE
 
             cardSubreddit.setOnClickListener {
                 if (!isOnline(main)) {
@@ -60,11 +71,37 @@ class SearchAdapter(private val list: List<Pair<String, String>>,private val fra
                 }
             }
 
-//            if (position == list.size - 1) {
-//                fragment.binder.contactLayout.visibility = View.VISIBLE
-//            } else {
-//                fragment.binder.contactLayout.visibility = View.GONE
-//            }
+            chipAddOrRemove.setOnClickListener {
+                chipAddOrRemove.bounce()
+                subredditToAddOrRemove = pair.second.replace("r/", "")
+                if (addOrRemove == ADD) {
+                    fragment.addFeedViewToCf()
+                } else {
+                    Snackbar.make(root, "r/$subredditToAddOrRemove", Snackbar.LENGTH_SHORT)
+                        .setAction("Remove") {
+                            val reddit = getReddit()
+                            fragment.binder.apply {
+                                val chp = chipGroupCf.findViewById<Chip>(chipGroupCf.checkedChipId)
+                                chp?.let { chip ->
+                                    val name = chip.tag.toString()
+                                    ioScope().launch {
+                                        main.shortToast("Removing...")
+                                        try {
+                                            reddit?.me()?.multi(name)?.removeSubreddit(subredditToAddOrRemove!!)
+                                        } catch (e: Exception) {
+                                        }
+                                        main.shortToast("Removed successfully 🎉")
+                                        subredditToAddOrRemove = null
+                                        runMain {
+                                            val id = chipGroupCf.indexOfChild(chip)
+                                            fragment.updateCustomFeeds(id)
+                                        }
+                                    }
+                                }
+                            }
+                        }.show()
+                }
+            }
         }
     }
 
