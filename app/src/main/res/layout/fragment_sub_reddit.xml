@@ -9,7 +9,6 @@
             type="com.odukle.viddit.SubRedditFragment" />
     </data>
 
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -71,7 +70,7 @@
                 android:id="@+id/tv_desc"
                 tools:text="desc goes here"
                 android:fontFamily="@font/regular"
-                android:maxLines="3"
+                android:maxLines="2"
                 android:ellipsize="end"
                 android:textSize="16sp"/>
 
@@ -85,99 +84,131 @@
                 android:textSize="16sp"/>
         </LinearLayout>
 
-        <com.google.android.material.chip.ChipGroup
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/chip_group"
-            android:layout_below="@id/layout_desc"
-            android:layout_marginTop="20dp"
-            android:layout_marginHorizontal="20dp"
-            app:singleSelection="true"
-            app:selectionRequired="true">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_hot"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checkable="true"
-                android:tag="hot"
-                android:checked="true"
-                android:text="Hot" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_new"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checkable="true"
-                android:tag="new"
-                android:text="New" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_top"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checkable="true"
-                android:tag="top"
-                android:text="Top" />
-        </com.google.android.material.chip.ChipGroup>
-
-        <com.google.android.material.chip.ChipGroup
+        <HorizontalScrollView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/chip_group"
-            android:layout_marginStart="20dp"
-            app:singleSelection="true"
-            app:selectionRequired="true"
-            android:visibility="gone"
-            android:id="@+id/chip_group_time">
+            android:id="@+id/scroll_view_chips"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginHorizontal="20dp"
+            android:layout_below="@id/layout_desc">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_top_now"
+            <com.google.android.material.chip.ChipGroup
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:checkable="true"
-                android:tag="hour"
-                android:text="Top now" />
+                android:id="@+id/chip_group"
+                app:singleSelection="true"
+                app:selectionRequired="true">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_top_today"
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_hot"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:tag="hot"
+                    android:checked="true"
+                    android:text="Hot" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_new"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:tag="new"
+                    android:text="New" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_top"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:tag="top"
+                    android:text="Top" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_rising"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:tag="rising"
+                    android:text="Rising" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_add_to_cf"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="false"
+                    android:tag="rising"
+                    android:backgroundTint="@color/orange"
+                    android:text="Add" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <HorizontalScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/scroll_view_time"
+            android:layout_centerHorizontal="true"
+            android:layout_marginHorizontal="20dp"
+            android:layout_below="@id/scroll_view_chips">
+
+            <com.google.android.material.chip.ChipGroup
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:checkable="true"
-                android:tag="day"
-                android:text="Top today" />
+                app:singleSelection="true"
+                app:selectionRequired="true"
+                android:visibility="gone"
+                app:singleLine="true"
+                android:id="@+id/chip_group_time">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_top_week"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checkable="true"
-                android:tag="week"
-                android:text="Top this week" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_top_now"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:tag="hour"
+                    android:text="Top now" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_top_year"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checkable="true"
-                android:tag="year"
-                android:text="Top this year" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_top_today"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:tag="day"
+                    android:text="Top today" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_top_all"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checkable="true"
-                android:tag="all"
-                android:text="Top all time" />
-        </com.google.android.material.chip.ChipGroup>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_top_week"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:tag="week"
+                    android:text="Top this week" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_top_year"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:tag="year"
+                    android:text="Top this year" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_top_all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:tag="all"
+                    android:text="Top all time" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/rv_subreddit"
-            android:layout_below="@id/chip_group_time"
-            android:layout_marginTop="20dp"/>
+            android:layout_below="@id/scroll_view_time"
+            android:layout_marginTop="10dp"/>
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="wrap_content"

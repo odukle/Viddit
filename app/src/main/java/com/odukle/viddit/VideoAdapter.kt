@@ -1,6 +1,7 @@
 package com.odukle.viddit
 
 import android.animation.LayoutTransition
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
@@ -32,10 +33,12 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.imageview.ShapeableImageView
+import com.google.android.material.snackbar.Snackbar
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import com.odukle.viddit.Helper.Companion.backstack
 import com.odukle.viddit.Helper.Companion.currentPlayer
+import com.odukle.viddit.Helper.Companion.getGifMp4
 import com.odukle.viddit.Helper.Companion.getSubredditInfo
 import com.odukle.viddit.Helper.Companion.getUserIcon
 import com.odukle.viddit.Helper.Companion.getVideos
@@ -47,6 +50,10 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.dean.jraw.RedditClient
+import net.dean.jraw.models.Submission
+import net.dean.jraw.models.VoteDirection
+import net.dean.jraw.pagination.DefaultPaginator
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -59,6 +66,7 @@ class VideoAdapter(
     private val fragment: MainFragment,
     private val order: String = "hot",
     private val time: String = "day",
+    private val pages: DefaultPaginator<Submission>? = null
 ) : RecyclerView.Adapter<VideoAdapter.VideoViewHolder>() {
 
     inner class VideoViewHolder(val binder: ItemViewVideoBinding) : RecyclerView.ViewHolder(binder.root) {
@@ -67,10 +75,17 @@ class VideoAdapter(
 
     private lateinit var attachedHolder: VideoViewHolder
     private lateinit var detachedHolder: VideoViewHolder
+    private var upperHolderPos = -1
+    private var middleHolderPos = 0
+    private var lowerHolderPos = 1
+    private lateinit var holderPosTracker: Runnable
     private var tempPlayer: ExoPlayer? = null
     private var mute = false
     val unShuffledList = mutableListOf<Video>()
     var playWhenReady = false
+    var calledFor = POPULAR
+    var content = MAIN_FEED
+    var loadGifsExternally = false
     private var allowPlay = true
 
     init {
@@ -95,6 +110,7 @@ class VideoAdapter(
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
         val post = list[position]
+        val reddit = main.redditHelper.reddit
         holder.binder.apply {
 
             /////////////////////////////////////////////////////////////////////SET VIEW DATA
@@ -105,18 +121,35 @@ class VideoAdapter(
             tvTitle.text = post.title.replace("amp;", "")
             tvFullTitle.text = post.title.replace("amp;", "")
             tvSubreddit.text = "r/" + post.subreddit
-            shimmerIcon.visibility = View.VISIBLE
-            shimmerUserIcon.visibility = View.VISIBLE
-            ivIcon.visibility = View.GONE
-            ivUserIcon.visibility = View.GONE
-
+            shimmerIcon.show()
+            shimmerUserIcon.show()
+            ivIcon.hide()
+            ivUserIcon.hide()
 
             CoroutineScope(IO).launch {
-                val subreddit = if (isOnline(main)) {
-                    getSubredditInfo(post.subredditPrefixed)
+                if (reddit != null) {
+                    val submission = reddit.submission(post.id).inspect()
+                    if (submission.vote == VoteDirection.UP) {
+                        main.runOnUiThread {
+                            ivUpvotes.setImageResource(R.drawable.ic_upvote_red)
+                            tvUpvotes.setTextColor(main.getColor(R.color.orange))
+                        }
+                    } else {
+                        main.runOnUiThread {
+                            ivUpvotes.setImageResource(R.drawable.ic_upvote)
+                            tvUpvotes.setTextColor(main.getColor(R.color.white))
+                        }
+                    }
+                }
+
+                val (subreddit, userSubreddit) = if (isOnline(main)) {
+                    Pair(getSubredditInfo(post.subredditPrefixed), getSubredditInfo("u/${post.author}", true))
                 } else {
                     main.longToast("No internet 😔")
-                    SubReddit("", "", "", "", "", "", "", "")
+                    Pair(
+                        SubReddit("", "", "", "", "", "", "", ""),
+                        SubReddit("", "", "", "", "", "", "", "")
+                    )
                 }
                 val userIcon = if (isOnline(main)) {
                     getUserIcon(post.author)
@@ -125,23 +158,27 @@ class VideoAdapter(
                     ""
                 }
                 withContext(Main) {
-                    Glide.with(root)
-                        .load(subreddit.icon)
-                        .placeholder(R.drawable.ic_reddit)
-                        .into(ivIcon)
+                    try {
+                        Glide.with(root)
+                            .load(subreddit.icon)
+                            .placeholder(R.drawable.ic_reddit)
+                            .into(ivIcon)
 
-                    Glide.with(root)
-                        .load(userIcon)
-                        .placeholder(R.drawable.ic_reddit_user)
-                        .into(ivUserIcon)
+                        Glide.with(root)
+                            .load(userIcon)
+                            .placeholder(R.drawable.ic_reddit_user)
+                            .into(ivUserIcon)
+                    } catch (e: Exception) {
+                    }
 
                     shimmerIcon.hide()
-                    ivIcon.show()
                     shimmerUserIcon.hide()
+                    ivIcon.show()
                     ivUserIcon.show()
 
                     arrayOf(tvSubreddit, ivIcon).forEach {
                         it.setOnClickListener {
+                            fragment.binder.chipGroup.clearCheck()
                             val fragmentTxn = main.supportFragmentManager.beginTransaction()
                             fragmentTxn.replace(R.id.container, SubRedditFragment.newInstance(subreddit))
                             fragmentTxn.addToBackStack("${backstack++}")
@@ -149,22 +186,31 @@ class VideoAdapter(
                         }
                     }
 
-                    arrayOf(ivComments, tvComments).forEach {
-                        it.setOnClickListener {
-                            val bottomSheetDialog = BottomSheetDialog(main)
-                            fragment.commentsBinder = DataBindingUtil.inflate(
-                                LayoutInflater.from(main),
-                                R.layout.layout_comments,
-                                null,
-                                false
-                            )
-                            bottomSheetDialog.setContentView(fragment.commentsBinder.root)
-                            bottomSheetDialog.show()
-                            getComments(post.permalink)
-                        }
+                    layoutUser.setOnClickListener {
+                        fragment.binder.chipGroup.clearCheck()
+                        val fragmentTxn = main.supportFragmentManager.beginTransaction()
+                        fragmentTxn.replace(R.id.container, SubRedditFragment.newInstance(userSubreddit, true))
+                        fragmentTxn.addToBackStack("${backstack++}")
+                        fragmentTxn.commit()
                     }
 
-                    ivDownload.setOnClickListener {
+                    commentsLayout.setOnClickListener {
+                        commentsLayout.bounce()
+                        val bottomSheetDialog = BottomSheetDialog(main)
+                        fragment.commentsBinder = DataBindingUtil.inflate(
+                            LayoutInflater.from(main),
+                            R.layout.layout_comments,
+                            null,
+                            false
+                        )
+                        bottomSheetDialog.setContentView(fragment.commentsBinder.root)
+                        bottomSheetDialog.show()
+                        getComments(post.permalink)
+                    }
+
+
+                    saveLayout.setOnClickListener {
+                        saveLayout.bounce()
                         if (main.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
                             Log.d(TAG, "requesting permission")
                             Helper.tempPost = post
@@ -185,33 +231,34 @@ class VideoAdapter(
             playerView.setControllerVisibilityListener {
                 val detailsParams = layoutPostDetails.layoutParams
                 if (it == View.VISIBLE) {
-                    fragment.binder.layoutToolbar.visibility = View.VISIBLE
-                    btnTogglePlay.visibility = View.VISIBLE
-                    if (post.nsfw != null && nsfwAllowed()) uncheckNsfw.visibility = View.VISIBLE
-                    btnMute.visibility = View.VISIBLE
+                    fragment.binder.layoutToolbar.show()
+                    btnTogglePlay.show()
+                    if (post.nsfw != null && nsfwAllowed()) uncheckNsfw.show()
+                    btnMute.show()
                     (detailsParams as RelativeLayout.LayoutParams).setMargins(20F.toDp(), 0, 20F.toDp(), 80F.toDp())
                     layoutPostDetails.layoutParams = detailsParams
                 } else {
-                    fragment.binder.layoutToolbar.visibility = View.GONE
-                    btnTogglePlay.visibility = View.GONE
-                    uncheckNsfw.visibility = View.GONE
-                    btnMute.visibility = View.GONE
+                    fragment.binder.layoutToolbar.hide()
+                    btnTogglePlay.hide()
+                    uncheckNsfw.hide()
+                    btnMute.hide()
                     (detailsParams as RelativeLayout.LayoutParams).setMargins(20F.toDp(), 0, 20F.toDp(), 0)
                     layoutPostDetails.layoutParams = detailsParams
                 }
             }
 
             tvTitle.setOnClickListener {
-                tvTitle.visibility = View.GONE
-                tvFullTitle.visibility = View.VISIBLE
+                tvTitle.hide()
+                tvFullTitle.show()
             }
 
             tvFullTitle.setOnClickListener {
-                tvTitle.visibility = View.VISIBLE
-                tvFullTitle.visibility = View.GONE
+                tvTitle.show()
+                tvFullTitle.hide()
             }
 
-            ivShare.setOnClickListener {
+            shareLayout.setOnClickListener {
+                shareLayout.bounce()
                 val intent = Intent().apply {
                     action = Intent.ACTION_SEND
                     type = "text/plain"
@@ -221,32 +268,17 @@ class VideoAdapter(
                 main.startActivity(intent)
             }
 
-            arrayOf(ivUpvotes, tvUpvotes).forEach {
-                it.setOnClickListener {
-                    val reddit = main.redditHelper.reddit
-                    if (reddit == null) {
-                        currentPlayer?.pause()
-                        main.redditHelper.startSignIn()
-                    } else {
-                        CoroutineScope(IO).launch {
-                            val submission = reddit.submission(post.id)
-                            var voteStr = submission.inspect().vote.name
-                            var voteNum = submission.inspect().vote.ordinal
-                            Log.d(TAG, "onBindViewHolder: $voteStr $voteNum")
-                            //
-                            reddit.submission(post.id).upvote()
-                            //
-                            ivUpvotes.setImageResource(R.drawable.ic_upvote_red)
-                            voteStr = submission.inspect().vote.name
-                            voteNum = submission.inspect().vote.ordinal
-                            Log.d(TAG, "onBindViewHolder: $voteStr $voteNum")
-                        }
-                    }
-                }
+            upvoteLayout.setOnClickListener {
+                vote(VoteDirection.UP, reddit, post.id, this)
+            }
+
+            downvoteLayout.setOnClickListener {
+                vote(VoteDirection.DOWN, reddit, post.id, this)
             }
 
             btnWatchAnyway.setOnClickListener {
-                layoutNsfw.visibility = View.GONE
+                btnWatchAnyway.bounce()
+                layoutNsfw.hide()
                 holder.player.play()
                 if (checkNsfw.isChecked) {
                     allowNSFW()
@@ -257,14 +289,36 @@ class VideoAdapter(
                 if (isChecked) {
                     doNotAllowNSFW()
                     checkNsfw.isChecked = false
-                    layoutNsfw.visibility = View.VISIBLE
+                    layoutNsfw.show()
                     holder.player.pause()
                 } else allowNSFW()
             }
         }
     }
 
-    override fun onViewAttachedToWindow(holder: VideoViewHolder) {
+    override fun onViewAttachedToWindow(holder: VideoAdapter.VideoViewHolder) {
+        if (holder.absoluteAdapterPosition == lowerHolderPos) animateViewHolder(holder.itemView, true) else animateViewHolder(holder.itemView, false)
+        holderPosTracker = Runnable {
+//            when (holder.absoluteAdapterPosition) {
+//                lowerHolderPos -> {
+//                    upperHolderPos = middleHolderPos
+//                    middleHolderPos = lowerHolderPos
+//                    lowerHolderPos++
+//                }
+//
+//                upperHolderPos -> {
+//                    lowerHolderPos = middleHolderPos
+//                    middleHolderPos = upperHolderPos
+//                    upperHolderPos--
+//                }
+//            }
+            middleHolderPos = holder.absoluteAdapterPosition
+            upperHolderPos = middleHolderPos-1
+            lowerHolderPos = middleHolderPos+1
+            Log.d(TAG, "onViewAttachedToWindow: $upperHolderPos, $middleHolderPos, $lowerHolderPos")
+        }
+
+//        animateViewHolder(holder.itemView, holder.absoluteAdapterPosition)
         val post = list[holder.absoluteAdapterPosition]
         val player = fragment.pool.acquire()
         holder.player = player
@@ -275,15 +329,49 @@ class VideoAdapter(
             playerView.controllerAutoShow = false
             playerView.player = null
             playerView.player = player
-            val uri = if (post.gif != "null") post.gifMp4 else post.video
-            val mimeType = if (post.gif != "null") MimeTypes.APPLICATION_MP4 else MimeTypes.APPLICATION_M3U8
-            val mediaItem = MediaItem.Builder()
-                .setUri(Uri.parse(uri))
-                .setMimeType(mimeType)
-                .build()
-            player.setMediaItem(mediaItem)
-            player.prepare()
-            player.playWhenReady = false
+
+            if (post.isVideo) {
+                val uri = post.video
+                val mimeType = MimeTypes.APPLICATION_M3U8
+                val mediaItem = MediaItem.Builder()
+                    .setUri(Uri.parse(uri))
+                    .setMimeType(mimeType)
+                    .build()
+                player.setMediaItem(mediaItem)
+                player.prepare()
+                player.playWhenReady = false
+            } else {
+                if (loadGifsExternally) {
+                    ioScope().launch {
+                        val pair = getGifMp4(post.permalink)
+                        val gif = pair.first
+                        val gifMp4 = pair.second
+                        mainScope().launch {
+                            val uri = gifMp4
+                            val mimeType = MimeTypes.APPLICATION_MP4
+                            val mediaItem = MediaItem.Builder()
+                                .setUri(Uri.parse(uri))
+                                .setMimeType(mimeType)
+                                .build()
+                            player.setMediaItem(mediaItem)
+                            player.prepare()
+                            player.playWhenReady = true
+                        }
+                    }
+                } else {
+                    val uri = post.gifMp4
+                    val mimeType = MimeTypes.APPLICATION_MP4
+                    val mediaItem = MediaItem.Builder()
+                        .setUri(Uri.parse(uri))
+                        .setMimeType(mimeType)
+                        .build()
+                    player.setMediaItem(mediaItem)
+                    player.prepare()
+                    player.playWhenReady = false
+                }
+            }
+
+
 
             if (mute) {
                 player.volume = 0f
@@ -298,10 +386,10 @@ class VideoAdapter(
         ///////////////////////////////////////////////////////////////////////////
 
         if (post.nsfw != null && !nsfwAllowed()) {
-            holder.binder.layoutNsfw.visibility = View.VISIBLE
+            holder.binder.layoutNsfw.show()
             allowPlay = false
         } else {
-            holder.binder.layoutNsfw.visibility = View.GONE
+            holder.binder.layoutNsfw.hide()
             if (post.nsfw != null) holder.binder.playerView.performClick()
             allowPlay = true
         }
@@ -314,8 +402,8 @@ class VideoAdapter(
 
         when (holder.absoluteAdapterPosition) {
             0 -> {
-                fragment.binder.ivGoToTop.visibility = View.GONE
-                fragment.binder.ivReload.visibility = View.VISIBLE
+                fragment.binder.ivGoToTop.hide()
+                fragment.binder.ivReload.show()
                 fragment.binder.ivReload.bringToFront()
             }
 
@@ -330,9 +418,9 @@ class VideoAdapter(
             }
 
             else -> {
-                fragment.binder.ivGoToTop.visibility = View.VISIBLE
+                fragment.binder.ivGoToTop.show()
                 fragment.binder.ivGoToTop.bringToFront()
-                fragment.binder.ivReload.visibility = View.GONE
+                fragment.binder.ivReload.hide()
             }
 
         }
@@ -374,8 +462,9 @@ class VideoAdapter(
         super.onViewAttachedToWindow(holder)
     }
 
-    override fun onViewDetachedFromWindow(holder: VideoViewHolder) {
-        fragment.binder.layoutToolbar.visibility = View.GONE
+    override fun onViewDetachedFromWindow(holder: VideoAdapter.VideoViewHolder) {
+        if (holder.absoluteAdapterPosition == middleHolderPos) holderPosTracker.run()
+        fragment.binder.layoutToolbar.hide()
         detachedHolder = holder
         if (attachedHolder == detachedHolder) {
             currentPlayer = tempPlayer
@@ -396,11 +485,25 @@ class VideoAdapter(
         return unShuffledList.size
     }
 
+    ///////////////////////////////////////////////////////////////////////////METHODS
+
+    private fun animateViewHolder(view: View, isNext: Boolean) {
+        if (isNext) {
+            view.top = 0
+            ObjectAnimator.ofFloat(view, "scaleX", 0.7F, 1F).setDuration(500).start()
+            ObjectAnimator.ofFloat(view, "scaleY", 0.7F, 1F).setDuration(500).start()
+        } else {
+            ObjectAnimator.ofFloat(view, "scaleX", 1.3F, 1F).setDuration(500).start()
+            ObjectAnimator.ofFloat(view, "scaleY", 1.3F, 1F).setDuration(500).start()
+        }
+    }
+
     suspend fun loadMoreData(lastPost: String, shuffle: Boolean = false, callCount: Int = 0, refresh: Boolean = false): Unit = withContext(IO) {
         try {
             val oldSize = itemCount
             if (callCount < 2) {
-                val vList = getVideos(subredditPrefixed, lastPost, 0, order, time)
+                val vList = if (subredditPrefixed.isNotEmpty()) getVideos(subredditPrefixed, lastPost, 0, order, time)
+                else fragment.getVideosFromPages(pages!!)
                 unShuffledList.addAll(vList)
                 list.addAll(vList)
 
@@ -427,44 +530,6 @@ class VideoAdapter(
         notifyItemRangeChanged(0, itemCount)
     }
 
-    companion object {
-        @SuppressLint("Range")
-        fun startDownloading(post: Video): Long {
-            val permalink = post.permalink
-            val name = post.name
-            main.shortToast("Download started")
-            val url = if (post.isVideo) {
-                val fallbackUrl = post.videoDownloadUrl
-                val audioUrl = fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
-                "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
-            } else {
-                post.gif
-            }
-
-            val request = DownloadManager.Request(Uri.parse(url))
-            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-                .setDescription("Downloading reddit video...")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, "Viddit/$name.mp4")
-
-            val manager = main.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val id = manager.enqueue(request)
-
-            val receiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context?, intent: Intent?) {
-                    val mId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-                    if (id == mId) {
-                        main.longToast("Downloaded $name.mp4 to Movies/Viddit")
-                    }
-                }
-
-            }
-
-            main.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
-            return id
-        }
-    }
-
     private fun getComments(permalink: String) {
 
         if (!isOnline(main)) {
@@ -472,7 +537,7 @@ class VideoAdapter(
             return
         }
 
-        fragment.commentsBinder.shimmerRc.visibility = View.VISIBLE
+        fragment.commentsBinder.shimmerRc.show()
         CoroutineScope(IO).launch {
             val client = OkHttpClient()
             val request = Request.Builder()
@@ -495,7 +560,7 @@ class VideoAdapter(
             }
 
             withContext(Main) {
-                fragment.commentsBinder.shimmerRc.visibility = View.GONE
+                fragment.commentsBinder.shimmerRc.hide()
             }
         }
     }
@@ -679,6 +744,105 @@ class VideoAdapter(
                 }
 
             }
+        }
+    }
+
+    private fun vote(
+        dir: VoteDirection,
+        reddit: RedditClient?,
+        id: String,
+        binder: ItemViewVideoBinding
+    ) {
+        binder.apply {
+            val strVote = if (dir == VoteDirection.UP) "upvote" else "downvote"
+            val strVoted = if (dir == VoteDirection.UP) "Upvoted" else "Downvoted"
+            val tv = if (dir == VoteDirection.UP) tvUpvotes else tvDownvote
+            val iv = if (dir == VoteDirection.UP) ivUpvotes else ivDownvote
+            val tvEx = if (dir == VoteDirection.UP) tvDownvote else tvUpvotes
+            val ivEx = if (dir == VoteDirection.UP) ivDownvote else ivUpvotes
+            val src = if (dir == VoteDirection.UP) R.drawable.ic_upvote else R.drawable.ic_downvote
+            val srcEx = if (dir == VoteDirection.UP) R.drawable.ic_downvote else R.drawable.ic_upvote
+            val srcRed = if (dir == VoteDirection.UP) R.drawable.ic_upvote_red else R.drawable.ic_downvote_red
+            var score = tvUpvotes.text.toString().toInt()
+            if (reddit == null) {
+                currentPlayer?.pause()
+                Snackbar.make(fragment.binder.root, "Sign in to $strVote", Snackbar.LENGTH_SHORT)
+                    .setAction("Sign in") { main.redditHelper.startSignIn() }.show()
+            } else {
+                CoroutineScope(IO).launch {
+                    main.shortToast("Voting...")
+                    val submission = reddit.submission(id)
+                    val voteDir = submission.inspect().vote
+                    if (voteDir != dir) {
+                        //change vote image color
+                        main.runOnUiThread {
+                            main.shortToast(strVoted)
+                            iv.setImageResource(srcRed)
+                            tv.setTextColor(main.getColor(R.color.orange))
+                            iv.bounce(); tv.bounce()
+                            if (voteDir != VoteDirection.NONE) {
+                                ivEx.setImageResource(srcEx)
+                                tvEx.setTextColor(main.getColor(R.color.white))
+                            }
+                            tvUpvotes.text = if (dir == VoteDirection.DOWN) (--score).toString() else (++score).toString()
+                        }
+                        //upvote
+                        submission.setVote(dir)
+                    } else {
+                        //change vote image color
+                        main.runOnUiThread {
+                            main.shortToast("Removed $strVote")
+                            iv.setImageResource(src)
+                            iv.bounce(); tv.bounce()
+                            tv.setTextColor(main.getColor(R.color.white))
+                            tvUpvotes.text = if (dir == VoteDirection.DOWN) (++score).toString() else (--score).toString()
+                        }
+                        //remove vote
+                        submission.setVote(VoteDirection.NONE)
+                    }
+                }
+            }
+        }
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    companion object {
+        @SuppressLint("Range")
+        fun startDownloading(post: Video): Long {
+            val permalink = post.permalink
+            val name = post.name
+            main.shortToast("Download started")
+            val url = if (post.isVideo) {
+                val fallbackUrl = post.videoDownloadUrl
+                val audioUrl = fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
+                "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
+            } else {
+                post.gif
+            }
+
+            Log.d(TAG, "startDownloading: $url")
+
+            val request = DownloadManager.Request(Uri.parse(url))
+            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
+                .setDescription("Downloading reddit video...")
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, "Viddit/$name.mp4")
+
+            val manager = main.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val id = manager.enqueue(request)
+
+            val receiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    val mId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+                    if (id == mId) {
+                        main.longToast("Downloaded $name.mp4 to Movies/Viddit")
+                    }
+                }
+
+            }
+
+            main.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+            return id
         }
     }
 }

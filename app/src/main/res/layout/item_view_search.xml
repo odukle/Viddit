@@ -36,10 +36,19 @@
                     android:maxLines="1"
                     android:ellipsize="end"
                     android:layout_toEndOf="@id/iv_icon"
+                    android:layout_toStartOf="@id/chip_add_or_remove"
                     android:layout_centerVertical="true"
                     android:layout_marginStart="20dp"
                     android:fontFamily="@font/regular"
                     android:textSize="20sp"/>
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/chip_add_or_remove"
+                android:layout_alignParentEnd="true"
+                android:text="Add"
+                android:backgroundTint="@color/orange"/>
         </RelativeLayout>
     </com.google.android.material.card.MaterialCardView>
 </layout>

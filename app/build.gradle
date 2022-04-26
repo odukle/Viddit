@@ -14,8 +14,8 @@ android {
         applicationId "com.odukle.viddit"
         minSdkVersion 23
         targetSdkVersion 31
-        versionCode 9
-        versionName "1.4"
+        versionCode 11
+        versionName "2.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -66,5 +66,7 @@ dependencies {
     implementation'com.facebook.shimmer:shimmer:0.5.0'
     implementation"androidx.browser:browser:1.4.0"
     implementation 'com.google.android.exoplayer:extension-ima:2.17.1'
-    implementation "net.dean.jraw:JRAW:1.1.0"
+    implementation 'net.dean.jraw:JRAW-Android:1.1.0'
+    implementation 'com.google.auto.value:auto-value-annotations:1.9'
+    implementation 'com.google.code.gson:gson:2.8.7'
 }

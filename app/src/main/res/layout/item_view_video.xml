@@ -114,6 +114,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
+                android:id="@+id/layout_user"
                 android:orientation="horizontal">
 
                 <com.facebook.shimmer.ShimmerFrameLayout
@@ -153,18 +154,20 @@
                 android:id="@+id/stats_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:weightSum="4"
+                android:weightSum="5"
                 android:layout_marginTop="10dp"
                 android:background="@drawable/stat_bg"
-                android:paddingVertical="10dp"
                 android:layout_marginBottom="20dp"
                 android:orientation="horizontal">
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:id="@+id/upvote_layout"
                     android:orientation="vertical"
                     android:gravity="center_horizontal"
+                    android:paddingVertical="10dp"
                     android:layout_weight="1">
 
                     <ImageView
@@ -176,16 +179,20 @@
 
                     <TextView
                         android:id="@+id/tv_upvotes"
-                        style="@style/TextViewShadow"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/regular"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         tools:text="1234" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:id="@+id/comments_layout"
+                    android:paddingVertical="10dp"
                     android:layout_weight="1"
                     android:gravity="center_horizontal"
                     android:orientation="vertical">
@@ -199,17 +206,49 @@
 
                     <TextView
                         android:id="@+id/tv_comments"
-                        style="@style/TextViewShadow"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/regular"
                         android:textColor="@color/white"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         tools:text="1234" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:id="@+id/downvote_layout"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal"
+                    android:paddingVertical="10dp"
+                    android:layout_weight="1">
+
+                    <ImageView
+                        android:id="@+id/iv_downvote"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="5dp"
+                        android:src="@drawable/ic_downvote" />
+
+                    <TextView
+                        android:id="@+id/tv_downvote"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
+                        android:textColor="@color/white"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="Downvote" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:id="@+id/share_layout"
+                    android:paddingVertical="10dp"
                     android:layout_weight="1"
                     android:gravity="center_horizontal"
                     android:orientation="vertical">
@@ -223,17 +262,21 @@
 
                     <TextView
                         android:id="@+id/tv_share"
-                        style="@style/TextViewShadow"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/regular"
                         android:text="Share"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         android:textColor="@color/white" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:id="@+id/save_layout"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:paddingVertical="10dp"
                     android:layout_weight="1"
                     android:gravity="center_horizontal"
                     android:orientation="vertical">
@@ -247,11 +290,12 @@
 
                     <TextView
                         android:id="@+id/tv_download"
-                        style="@style/TextViewShadow"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/regular"
-                        android:text="Save"
+                        android:text="Download"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         android:textColor="@color/white" />
                 </LinearLayout>
 

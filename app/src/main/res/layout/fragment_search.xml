@@ -25,6 +25,16 @@
                 android:paddingHorizontal="10dp"
                 app:layout_scrollFlags="scroll|enterAlways">
 
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/iv_menu"
+                    android:src="@drawable/ic_burger_menu"
+                    android:layout_centerVertical="true"
+                    android:padding="10dp"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:layout_alignParentStart="true"/>
+
                 <TextView
                     android:id="@+id/tv_query"
                     android:layout_width="match_parent"
@@ -32,6 +42,7 @@
                     android:layout_centerVertical="true"
                     android:layout_marginStart="5dp"
                     android:layout_toStartOf="@id/tv_feed"
+                    android:layout_toEndOf="@id/iv_menu"
                     android:fontFamily="@font/bold"
                     android:text="Top subreddits today"
                     android:textSize="16sp" />
@@ -102,10 +113,31 @@
             </RelativeLayout>
 
             <HorizontalScrollView
-                android:id="@+id/scroll_view_chips"
-                android:layout_width="match_parent"
+                android:id="@+id/scroll_view_chips_cf"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="10dp"
+                android:layout_gravity="center_horizontal"
+                android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_cf"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleLine="true"
+                app:selectionRequired="true"
+                android:visibility="gone"
+                app:singleSelection="true">
+
+            </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+
+            <HorizontalScrollView
+                android:id="@+id/scroll_view_chips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="10dp"
+                android:layout_gravity="center_horizontal"
                 android:scrollbars="none">
 
                 <com.google.android.material.chip.ChipGroup
@@ -120,6 +152,7 @@
                         android:id="@+id/chip_videos"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="videos" />
 
@@ -127,6 +160,7 @@
                         android:id="@+id/chip_memes"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="memes" />
 
@@ -134,6 +168,7 @@
                         android:id="@+id/chip_funny"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="funny" />
 
@@ -141,6 +176,7 @@
                         android:id="@+id/chip_aww"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="aww" />
 
@@ -148,6 +184,7 @@
                         android:id="@+id/chip_wholesome"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="wholesome" />
 
@@ -155,6 +192,7 @@
                         android:id="@+id/chip_dank"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="dank" />
 
@@ -162,6 +200,7 @@
                         android:id="@+id/chip_news"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="news" />
 
@@ -169,6 +208,7 @@
                         android:id="@+id/movies"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="movies" />
 
@@ -176,6 +216,7 @@
                         android:id="@+id/sports"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="sports" />
 
@@ -183,6 +224,7 @@
                         android:id="@+id/travel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="travel" />
 
@@ -190,6 +232,7 @@
                         android:id="@+id/science"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="science" />
 
@@ -197,8 +240,18 @@
                         android:id="@+id/food"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
                         android:checkable="true"
                         android:text="food" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_custom_feed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
+                        android:checkable="false"
+                        android:backgroundTint="@color/orange"
+                        android:text="your custom feeds" />
                 </com.google.android.material.chip.ChipGroup>
             </HorizontalScrollView>
 
@@ -257,6 +310,15 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="250dp"
+                            android:id="@+id/tv_such_empty"
+                            android:text="Wow, such empty 😿"
+                            android:gravity="center"
+                            android:layout_centerInParent="true"
+                            android:visibility="gone"/>
+
                         <androidx.recyclerview.widget.RecyclerView
                             android:id="@+id/rv_search"
                             android:layout_width="match_parent"
@@ -264,13 +326,24 @@
                             android:layout_marginVertical="5dp" />
                     </RelativeLayout>
 
+                    <com.google.android.material.chip.Chip
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/chip_delete_feed"
+                        android:layout_marginTop="20dp"
+                        android:layout_gravity="center_horizontal"
+                        android:text="Delete this feed"
+                        android:fontFamily="@font/regular"
+                        android:visibility="gone"
+                        android:backgroundTint="@color/orange"/>
+
                     <Switch
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Allow NSFW content"
                         android:id="@+id/switch_nsfw"
                         android:layout_gravity="center_horizontal"
-                        android:layout_marginTop="20dp"
+                        android:layout_marginTop="10dp"
                         android:fontFamily="@font/regular"
                         android:switchPadding="8dp"/>
 

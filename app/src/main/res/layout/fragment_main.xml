@@ -24,12 +24,37 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical" />
-            
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone"
+                android:layout_centerInParent="true"
+                android:id="@+id/layout_empty_feed">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="You have not added any subreddits to this feed"
+                    android:fontFamily="@font/regular"/>
+
+                <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/chip_add_subreddits"
+                    android:text="Add subreddits"
+                    android:layout_marginTop="10dp"
+                    android:fontFamily="@font/regular"
+                    android:backgroundTint="@color/orange"/>
+            </LinearLayout>
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="20dp"
+                android:animateLayoutChanges="true"
                 android:background="@color/black"
                 android:id="@+id/layout_toolbar">
 
@@ -53,6 +78,16 @@
                         android:layout_centerVertical="true"
                         android:padding="10dp"
                         android:visibility="gone"
+                        android:layout_toStartOf="@id/iv_menu"/>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/iv_menu"
+                        android:src="@drawable/ic_burger_menu"
+                        android:layout_centerVertical="true"
+                        android:padding="10dp"
+                        android:foreground="?attr/selectableItemBackground"
                         android:layout_alignParentEnd="true"/>
 
                     <ImageView
@@ -62,7 +97,8 @@
                         android:src="@drawable/ic_shuffle"
                         android:layout_centerVertical="true"
                         android:padding="10dp"
-                        android:layout_alignParentEnd="true"/>
+                        android:foreground="?attr/selectableItemBackground"
+                        android:layout_toStartOf="@id/iv_menu"/>
 
                     <ImageView
                         android:id="@+id/iv_search"
@@ -85,13 +121,47 @@
                         android:textSize="16sp"/>
                 </RelativeLayout>
 
+                <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/btn_back_to_main"
+                    android:text="Go to your custom feeds"
+                    android:fontFamily="@font/regular"
+                    android:layout_centerHorizontal="true"
+                    android:layout_below="@id/toolbar"
+                    android:visibility="visible"
+                    android:backgroundTint="@color/orange"/>
+
+                <HorizontalScrollView
+                    android:id="@+id/scroll_view_cf_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:visibility="visible"
+                    android:layout_marginBottom="5dp"
+                    android:layout_below="@id/btn_back_to_main"
+                    android:scrollbars="none">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group_cf"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:singleLine="true"
+                        android:visibility="gone"
+                        app:selectionRequired="true"
+                        app:singleSelection="true">
+
+
+                    </com.google.android.material.chip.ChipGroup>
+                </HorizontalScrollView>
 
                 <HorizontalScrollView
                     android:id="@+id/scroll_view_chips"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    android:layout_below="@id/toolbar"
+                    android:visibility="visible"
+                    android:layout_below="@id/scroll_view_cf_chips"
+                    android:layout_centerHorizontal="true"
                     android:scrollbars="none">
 
                     <com.google.android.material.chip.ChipGroup
@@ -99,6 +169,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         app:singleLine="true"
+                        app:selectionRequired="true"
+                        android:layout_marginBottom="5dp"
                         app:singleSelection="true">
 
                         <com.google.android.material.chip.Chip
@@ -106,6 +178,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
+                            android:tag="r/popular"
+                            android:fontFamily="@font/regular"
                             android:text="popular" />
 
                         <com.google.android.material.chip.Chip
@@ -113,6 +187,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
+                            android:tag="user/odukle/m/meme"
+                            android:fontFamily="@font/regular"
                             android:text="memes" />
 
                         <com.google.android.material.chip.Chip
@@ -120,70 +196,18 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
+                            android:tag="user/odukle/m/funny"
+                            android:fontFamily="@font/regular"
                             android:text="funny" />
 
                         <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_aww"
+                            android:id="@+id/chip_weird"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:checkable="true"
-                            android:text="aww" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_wholesome"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checkable="true"
-                            android:text="wholesome" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_dank"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checkable="true"
-                            android:text="dank" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chip_news"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checkable="true"
-                            android:text="news" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/movies"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checkable="true"
-                            android:text="movies" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/sports"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checkable="true"
-                            android:text="sports" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/travel"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checkable="true"
-                            android:text="travel" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/science"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checkable="true"
-                            android:text="science" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/food"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checkable="true"
-                            android:text="food" />
+                            android:tag="user/odukle/m/weird"
+                            android:fontFamily="@font/regular"
+                            android:text="weird" />
                     </com.google.android.material.chip.ChipGroup>
                 </HorizontalScrollView>
             </RelativeLayout>
