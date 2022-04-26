@@ -5,8 +5,11 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.webkit.CookieManager
+import android.webkit.WebSettings
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -17,7 +20,7 @@ import com.odukle.viddit.Helper.Companion.currentPlayer
 import com.odukle.viddit.Helper.Companion.tempPost
 import com.odukle.viddit.Helper.Companion.videoList
 import com.odukle.viddit.databinding.ActivityMainBinding
-import net.dean.jraw.RedditClient
+
 
 private const val TAG = "MainActivity"
 
@@ -25,9 +28,9 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var binder: ActivityMainBinding
     lateinit var sharedPreferences: SharedPreferences
-    private lateinit var toast: Toast
+    lateinit var toast: Toast
     private lateinit var mFirebaseAnalytics: FirebaseAnalytics
-    lateinit var reddit: RedditClient
+
     //
     var redditHelper = RedditHelper()
 
@@ -48,6 +51,16 @@ class MainActivity : AppCompatActivity() {
         //
         videoList.clear()
         currentPlayer = null
+        ///
+
+        val cookieManager: CookieManager = CookieManager.getInstance()
+
+        val webView = binder.browser
+        val ws = webView.settings
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ws.forceDark = WebSettings.FORCE_DARK_ON
+        }
+        ws.cacheMode = WebSettings.LOAD_NO_CACHE
 
         ////
         val fragmentTxn = supportFragmentManager.beginTransaction()
@@ -58,9 +71,7 @@ class MainActivity : AppCompatActivity() {
     fun longToast(text: String) {
         runOnUiThread {
             toast.cancel()
-            toast = Toast(this)
-            toast.setText(text)
-            toast.duration = Toast.LENGTH_LONG
+            toast = Toast.makeText(this, text, Toast.LENGTH_LONG)
             toast.show()
         }
     }
@@ -68,9 +79,7 @@ class MainActivity : AppCompatActivity() {
     fun shortToast(text: String) {
         runOnUiThread {
             toast.cancel()
-            toast = Toast(this)
-            toast.setText(text)
-            toast.duration = Toast.LENGTH_SHORT
+            toast = Toast.makeText(this, text, Toast.LENGTH_SHORT)
             toast.show()
         }
     }
@@ -82,7 +91,7 @@ class MainActivity : AppCompatActivity() {
             binder.browserLayout.hide()
         } else {
             if (count == 0) {
-                finish()
+                finishAffinity()
             } else {
                 supportFragmentManager.popBackStack()
             }
@@ -110,7 +119,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        redditHelper.onOAuthResult(intent)
+//        redditHelper.onOAuthResult(intent)
     }
 
     companion object {
@@ -148,5 +157,19 @@ class MainActivity : AppCompatActivity() {
         //pass the url to intent data
         intent.data = Uri.parse(url)
         startActivity(intent)
+    }
+
+    fun triggerRebirth() {
+        val packageManager = packageManager
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        val componentName = intent!!.component
+        val mainIntent = Intent.makeRestartActivityTask(componentName)
+        startActivity(mainIntent)
+        Runtime.getRuntime().exit(0)
+    }
+
+    fun clearCookies() {
+        CookieManager.getInstance().removeAllCookies(null);
+        CookieManager.getInstance().flush();
     }
 }
