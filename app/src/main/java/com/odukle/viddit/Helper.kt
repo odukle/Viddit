@@ -6,8 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.util.Log
-import android.util.TypedValue
-import android.view.View
+        import android.view.View
 import androidx.annotation.Nullable
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -59,8 +58,10 @@ class Helper {
             after: String,
             callCount: Int = 0,
             order: String = "hot",
-            time: String = "day"
+            time: String = "day",
+            isUser: Boolean = false
         ): MutableList<Video> = withContext(IO) {
+            Log.d(TAG, "getVideos: called")
             if (!isOnline(main)) {
                 main.runOnUiThread {
                     main.longToast("Please check your internet connection and retry")
@@ -70,7 +71,8 @@ class Helper {
             /////////////////////////////////////////////////////////////////////////////////////SET VISIBILITIES
 
             val vList = mutableListOf<Video>()
-            val uri = Uri.parse("https://www.reddit.com/$subreddit/$order/.json")
+            val mOrder = if (isUser) "" else "$order/"
+            val uri = Uri.parse("https://www.reddit.com/$subreddit/$mOrder.json")
                 .buildUpon()
                 .appendQueryParameter("limit", "100")
                 .appendQueryParameter("after", after)
@@ -80,8 +82,8 @@ class Helper {
                 .appendQueryParameter("include_over_18", "on")
 
             try {
+                Log.d(TAG, "getVideos: $uri")
                 val client = OkHttpClient()
-                subreddit.replace(" ", "")
                 val request = Request.Builder()
                     .url(uri.toString())
                     .get()
@@ -91,10 +93,13 @@ class Helper {
                 val json = response.body?.string()
                 val jsonObject = JsonParser.parseString(json).asJsonObject
                 val posts = jsonObject["data"].asJsonObject["children"].asJsonArray
+                Log.d(TAG, "getVideos: ${posts.size()}")
+                var count = 0
                 posts.forEach { element ->
+                    if (isUser) Log.d(TAG, "getVideos: ${++count}")
                     val post = element.asJsonObject["data"].asJsonObject
                     val title = try {
-                        post["title"].asString
+                        if (!isUser) post["title"].asString else post["link_title"].asString
                     } catch (e: Exception) {
                         "null"
                     }
@@ -148,8 +153,16 @@ class Helper {
                     } catch (e: Exception) {
                         "null"
                     }
-                    val created = post["created"].asLong
-                    val isVideo = post["is_video"].asBoolean
+                    val created = try {
+                        post["created"].asLong
+                    } catch (e: Exception) {
+                        0
+                    }
+                    val isVideo = try {
+                        post["is_video"].asBoolean
+                    } catch (e: Exception) {
+                        false
+                    }
                     val video = try {
                         post["media"].asJsonObject["reddit_video"].asJsonObject["hls_url"].asString.replace("amp;", "")
                     } catch (e: Exception) {
@@ -279,7 +292,7 @@ class Helper {
             vList
         }
 
-        suspend fun getSubredditInfo(subreddit: String): SubReddit = withContext(IO) {
+        suspend fun getSubredditInfo(subreddit: String, isUser: Boolean = false): SubReddit = withContext(IO) {
 
             try {
                 val client = OkHttpClient()
@@ -291,17 +304,18 @@ class Helper {
                 val response = client.newCall(request).execute()
                 val json = response.body?.string()
                 val jsonObject = JsonParser.parseString(json).asJsonObject
-                val data = jsonObject["data"].asJsonObject
+                val data = if (!isUser) jsonObject["data"].asJsonObject else jsonObject["data"].asJsonObject["subreddit"].asJsonObject
                 val title = try {
                     data["title"].asString
                 } catch (e: Exception) {
                     "null"
                 }
-                val titlePrefixed = try {
+                var titlePrefixed = try {
                     data["display_name_prefixed"].asString
                 } catch (e: Exception) {
                     "null"
                 }
+
                 val desc = try {
                     data["public_description"].asString
                 } catch (e: Exception) {
@@ -440,6 +454,55 @@ class Helper {
             rList
         }
 
+        suspend fun getGifMp4(permalink: String) = withContext(IO) {
+            var pair: Pair<String, String>
+            try {
+                val client = OkHttpClient()
+                val request = Request.Builder()
+                    .url("$permalink/.json")
+                    .get()
+                    .build()
+
+                val response = client.newCall(request).execute()
+                val json = response.body?.string()
+                val jsonObject = JsonParser.parseString(json).asJsonArray[0].asJsonObject
+                val post = jsonObject["data"].asJsonObject["children"].asJsonArray[0].asJsonObject["data"].asJsonObject
+                val gif = try {
+                    post["preview"]
+                        .asJsonObject["images"]
+                        .asJsonArray[0]
+                        .asJsonObject["variants"]
+                        .asJsonObject["gif"]
+                        .asJsonObject["source"]
+                        .asJsonObject["url"]
+                        .asString
+                        .replace("amp;", "")
+                } catch (e: Exception) {
+                    "null"
+                }
+                val gifmp4 = try {
+                    post["preview"]
+                        .asJsonObject["images"]
+                        .asJsonArray[0]
+                        .asJsonObject["variants"]
+                        .asJsonObject["mp4"]
+                        .asJsonObject["source"]
+                        .asJsonObject["url"]
+                        .asString
+                        .replace("amp;", "")
+                } catch (e: Exception) {
+                    "null"
+                }
+
+                pair = Pair(gif, gifmp4)
+            } catch (e: Exception) {
+                Log.e(TAG, "getgifMp4: ${e.stackTraceToString()}")
+                pair = Pair("null", "null")
+            }
+
+            pair
+        }
+
         suspend fun getSubreddits(query: String) = withContext(IO) {
             Log.d(TAG, "getSubreddits: called")
             val rList = mutableListOf<Pair<String, String>>()
@@ -524,12 +587,5 @@ class Helper {
             }
         }
 
-        fun Float.toDp(): Int {
-            return TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP,
-                this,
-                main.resources.displayMetrics
-            ).toInt()
-        }
     }
 }
