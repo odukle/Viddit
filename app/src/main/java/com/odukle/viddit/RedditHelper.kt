@@ -17,7 +17,6 @@ import net.dean.jraw.http.OkHttpNetworkAdapter
 import net.dean.jraw.http.UserAgent
 import net.dean.jraw.models.Submission
 import net.dean.jraw.models.SubredditSort
-import net.dean.jraw.oauth.Credentials
 import net.dean.jraw.oauth.StatefulAuthHelper
 import net.dean.jraw.pagination.DefaultPaginator
 
@@ -42,14 +41,14 @@ class RedditHelper {
 
     //    lateinit var accessToken: String
 //    lateinit var refreshToken: String
-    lateinit var credentials: Credentials
+//    lateinit var credentials: Credentials
     lateinit var adapter: OkHttpNetworkAdapter
     lateinit var authHelper: StatefulAuthHelper
     var reddit: RedditClient? = null
 
     fun init() {
         val userAgent = UserAgent("Android", BuildConfig.APPLICATION_ID, BuildConfig.VERSION_NAME, "odukle")
-        credentials = Credentials.installedApp(CLIENT_ID, REDIRECT_URI)
+//        credentials = Credentials.installedApp(CLIENT_ID, REDIRECT_URI)
         adapter = OkHttpNetworkAdapter(userAgent)
         authHelper = accountHelper.switchToNewUser()
 //        authHelper = OAuthHelper.interactive(adapter, credentials)

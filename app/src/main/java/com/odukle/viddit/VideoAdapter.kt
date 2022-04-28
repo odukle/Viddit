@@ -9,9 +9,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.text.util.Linkify
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
@@ -63,10 +65,10 @@ private const val TAG = "VideoAdapter"
 class VideoAdapter(
     val list: MutableList<Video>,
     private val subredditPrefixed: String,
-    private val fragment: MainFragment,
     private val order: String = "hot",
     private val time: String = "day",
-    private val pages: DefaultPaginator<Submission>? = null
+    private val pages: DefaultPaginator<Submission>? = null,
+    private val passedFragment: MainFragment? = null
 ) : RecyclerView.Adapter<VideoAdapter.VideoViewHolder>() {
 
     inner class VideoViewHolder(val binder: ItemViewVideoBinding) : RecyclerView.ViewHolder(binder.root) {
@@ -75,8 +77,10 @@ class VideoAdapter(
 
     private lateinit var attachedHolder: VideoViewHolder
     private lateinit var detachedHolder: VideoViewHolder
+    var fragment: MainFragment
+    lateinit var binder: ItemViewVideoBinding
     private var upperHolderPos = -1
-    private var middleHolderPos = 0
+    var middleHolderPos = 0
     private var lowerHolderPos = 1
     private lateinit var holderPosTracker: Runnable
     private var tempPlayer: ExoPlayer? = null
@@ -89,6 +93,7 @@ class VideoAdapter(
     private var allowPlay = true
 
     init {
+        fragment = passedFragment ?: getCurrentFragment() as MainFragment
         unShuffledList.addAll(list)
         runAfter(500) {
             if (fragment.rvPosition > itemCount / 2) {
@@ -103,12 +108,14 @@ class VideoAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoViewHolder {
-        val binder = DataBindingUtil.inflate<ItemViewVideoBinding>(LayoutInflater.from(parent.context), R.layout.item_view_video, parent, false)
+        binder = DataBindingUtil.inflate<ItemViewVideoBinding>(LayoutInflater.from(parent.context), R.layout.item_view_video, parent, false)
         return VideoViewHolder(binder)
     }
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: VideoViewHolder, position: Int) {
+
+        if (!fragment.isVisible) fragment = getCurrentFragment() as MainFragment
         val post = list[position]
         val reddit = main.redditHelper.reddit
         holder.binder.apply {
@@ -219,7 +226,7 @@ class VideoAdapter(
                                 111
                             )
                         } else {
-                            startDownloading(post)
+                            startDownloading(post, this@apply)
                         }
                     }
                 }
@@ -231,6 +238,9 @@ class VideoAdapter(
             playerView.setControllerVisibilityListener {
                 val detailsParams = layoutPostDetails.layoutParams
                 if (it == View.VISIBLE) {
+                    if (getOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
+                        fragment.binder.layoutChips?.show()
+                    }
                     fragment.binder.layoutToolbar.show()
                     btnTogglePlay.show()
                     if (post.nsfw != null && nsfwAllowed()) uncheckNsfw.show()
@@ -238,11 +248,14 @@ class VideoAdapter(
                     (detailsParams as RelativeLayout.LayoutParams).setMargins(20F.toDp(), 0, 20F.toDp(), 80F.toDp())
                     layoutPostDetails.layoutParams = detailsParams
                 } else {
+                    if (getOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
+                        fragment.binder.layoutChips?.hide()
+                    }
                     fragment.binder.layoutToolbar.hide()
                     btnTogglePlay.hide()
                     uncheckNsfw.hide()
                     btnMute.hide()
-                    (detailsParams as RelativeLayout.LayoutParams).setMargins(20F.toDp(), 0, 20F.toDp(), 0)
+                    (detailsParams as RelativeLayout.LayoutParams).setMargins(20F.toDp(), 0, 20F.toDp(), 20F.toDp())
                     layoutPostDetails.layoutParams = detailsParams
                 }
             }
@@ -297,28 +310,15 @@ class VideoAdapter(
     }
 
     override fun onViewAttachedToWindow(holder: VideoAdapter.VideoViewHolder) {
-        if (holder.absoluteAdapterPosition == lowerHolderPos) animateViewHolder(holder.itemView, true) else animateViewHolder(holder.itemView, false)
+        if (!fragment.isVisible) fragment = getCurrentFragment() as MainFragment
+        if (holder.absoluteAdapterPosition == lowerHolderPos) animateViewHolder(holder.itemView, true)
+        else animateViewHolder(holder.itemView, false)
         holderPosTracker = Runnable {
-//            when (holder.absoluteAdapterPosition) {
-//                lowerHolderPos -> {
-//                    upperHolderPos = middleHolderPos
-//                    middleHolderPos = lowerHolderPos
-//                    lowerHolderPos++
-//                }
-//
-//                upperHolderPos -> {
-//                    lowerHolderPos = middleHolderPos
-//                    middleHolderPos = upperHolderPos
-//                    upperHolderPos--
-//                }
-//            }
             middleHolderPos = holder.absoluteAdapterPosition
-            upperHolderPos = middleHolderPos-1
-            lowerHolderPos = middleHolderPos+1
-            Log.d(TAG, "onViewAttachedToWindow: $upperHolderPos, $middleHolderPos, $lowerHolderPos")
+            upperHolderPos = middleHolderPos - 1
+            lowerHolderPos = middleHolderPos + 1
         }
 
-//        animateViewHolder(holder.itemView, holder.absoluteAdapterPosition)
         val post = list[holder.absoluteAdapterPosition]
         val player = fragment.pool.acquire()
         holder.player = player
@@ -344,13 +344,11 @@ class VideoAdapter(
                 if (loadGifsExternally) {
                     ioScope().launch {
                         val pair = getGifMp4(post.permalink)
-                        val gif = pair.first
                         val gifMp4 = pair.second
                         mainScope().launch {
-                            val uri = gifMp4
                             val mimeType = MimeTypes.APPLICATION_MP4
                             val mediaItem = MediaItem.Builder()
-                                .setUri(Uri.parse(uri))
+                                .setUri(Uri.parse(gifMp4))
                                 .setMimeType(mimeType)
                                 .build()
                             player.setMediaItem(mediaItem)
@@ -541,7 +539,7 @@ class VideoAdapter(
         CoroutineScope(IO).launch {
             val client = OkHttpClient()
             val request = Request.Builder()
-                .url("$permalink.json")
+                .url("$permalink.json?raw_json=1")
                 .get()
                 .build()
 
@@ -617,6 +615,7 @@ class VideoAdapter(
                 ///////////////////////////////////////////////////// ADD VIEW TO THE LAYOUT
                 if (author != "null") {
                     val tvAuthor = TextView(main)
+                    tvAuthor.setTextIsSelectable(true)
                     tvAuthor.setPadding(px, 0, 0, 0)
                     tvAuthor.text = "u/" + author + " • " + dateCreated.toTimeAgo()
                     tvAuthor.textSize = 12F
@@ -657,6 +656,8 @@ class VideoAdapter(
                     val tvBody = TextView(main)
                     tvBody.setPadding(px, 0, 0, 0)
                     tvBody.text = body.replace("amp;", "").trim()
+                    tvBody.setTextIsSelectable(true)
+                    Linkify.addLinks(tvBody, Linkify.WEB_URLS)
                     tvBody.textSize = 18F
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         tvBody.typeface = main.resources.getFont(R.font.bold)
@@ -679,7 +680,7 @@ class VideoAdapter(
                                             View.GONE
                                         } else {
                                             (layout[layout.childCount - 1] as TextView).text = "Hide replies"
-                                            (layout[layout.childCount - 1] as TextView).setTextColor(main.getColor(android.R.color.holo_red_dark))
+                                            (layout[layout.childCount - 1] as TextView).setTextColor(main.getColor(android.R.color.holo_red_light))
                                             View.VISIBLE
                                         }
                                     }
@@ -808,16 +809,18 @@ class VideoAdapter(
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     companion object {
         @SuppressLint("Range")
-        fun startDownloading(post: Video): Long {
+        fun startDownloading(post: Video, binder: ItemViewVideoBinding): Long {
             val permalink = post.permalink
             val name = post.name
             main.shortToast("Download started")
+            binder.progressDownload.show()
+            binder.saveLayout.hide()
             val url = if (post.isVideo) {
                 val fallbackUrl = post.videoDownloadUrl
                 val audioUrl = fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
                 "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
             } else {
-                post.gif
+                post.gifMp4
             }
 
             Log.d(TAG, "startDownloading: $url")
@@ -836,6 +839,8 @@ class VideoAdapter(
                     val mId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                     if (id == mId) {
                         main.longToast("Downloaded $name.mp4 to Movies/Viddit")
+                        binder.progressDownload.hide()
+                        binder.saveLayout.show()
                     }
                 }
 

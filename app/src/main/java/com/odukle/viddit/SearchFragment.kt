@@ -563,6 +563,8 @@ class SearchFragment : Fragment() {
 
     override fun onDestroyView() {
         searchAdapter = adapter
+        bottomSheetDialogMenu.dismiss()
+        bottomSheetDialogCF.dismiss()
         super.onDestroyView()
     }
 

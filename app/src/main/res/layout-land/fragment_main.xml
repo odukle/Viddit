@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="MainFragment"
+            type="com.odukle.viddit.MainFragment" />
+    </data>
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/refresh_layout">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/vp_viddit"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone"
+                android:layout_centerInParent="true"
+                android:id="@+id/layout_empty_feed">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="You have not added any subreddits to this feed"
+                    android:fontFamily="@font/regular"/>
+
+                <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/chip_add_subreddits"
+                    android:text="Add subreddits"
+                    android:layout_marginTop="10dp"
+                    android:fontFamily="@font/regular"
+                    android:backgroundTint="@color/orange"/>
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:animateLayoutChanges="true"
+                android:background="@color/black"
+                android:id="@+id/layout_toolbar">
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:id="@+id/toolbar">
+
+                    <ImageView
+                        android:id="@+id/tv_app_name"
+                        android:layout_width="60dp"
+                        android:layout_height="?attr/actionBarSize"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/ic_icon__1"/>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/iv_go_to_top"
+                        android:src="@drawable/ic_go_to_top"
+                        android:layout_centerVertical="true"
+                        android:padding="20dp"
+                        android:visibility="gone"
+                        android:layout_above="@id/iv_menu"/>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/iv_menu"
+                        android:src="@drawable/ic_burger_menu"
+                        android:padding="20dp"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:layout_alignParentBottom="true"/>
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/iv_reload"
+                        android:src="@drawable/ic_shuffle"
+                        android:padding="20dp"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:layout_above="@id/iv_menu"/>
+
+                    <ImageView
+                        android:id="@+id/iv_search"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_centerVertical="true"
+                        android:padding="20dp"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_back"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/tv_discover"
+                        android:text="Discover"
+                        android:visibility="gone"
+                        android:layout_toEndOf="@id/iv_search"
+                        android:layout_alignParentTop="true"
+                        android:paddingHorizontal="5dp"
+                        android:fontFamily="@font/bold"
+                        android:textSize="16sp"/>
+                </RelativeLayout>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:id="@+id/layout_chips"
+                android:layout_toEndOf="@id/layout_toolbar">
+
+                <com.google.android.material.chip.Chip
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/btn_back_to_main"
+                    android:text="Go to your custom feeds"
+                    android:fontFamily="@font/regular"
+                    android:layout_centerHorizontal="true"
+                    android:visibility="visible"
+                    android:backgroundTint="@color/orange"/>
+
+                <HorizontalScrollView
+                    android:id="@+id/scroll_view_cf_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:visibility="visible"
+                    android:layout_marginBottom="5dp"
+                    android:layout_below="@id/btn_back_to_main"
+                    android:scrollbars="none">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group_cf"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:singleLine="true"
+                        android:visibility="gone"
+                        app:selectionRequired="true"
+                        app:singleSelection="true">
+
+
+                    </com.google.android.material.chip.ChipGroup>
+                </HorizontalScrollView>
+
+                <HorizontalScrollView
+                    android:id="@+id/scroll_view_chips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="visible"
+                    android:layout_below="@id/scroll_view_cf_chips"
+                    android:layout_centerHorizontal="true"
+                    android:scrollbars="none">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chip_group"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:singleLine="true"
+                        app:selectionRequired="true"
+                        android:layout_marginBottom="5dp"
+                        app:singleSelection="true">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_popular"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checkable="true"
+                            android:tag="r/popular"
+                            android:fontFamily="@font/regular"
+                            android:text="popular" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_memes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checkable="true"
+                            android:tag="user/odukle/m/meme"
+                            android:fontFamily="@font/regular"
+                            android:text="memes" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_funny"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checkable="true"
+                            android:tag="user/odukle/m/funny"
+                            android:fontFamily="@font/regular"
+                            android:text="funny" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_weird"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checkable="true"
+                            android:tag="user/odukle/m/weird"
+                            android:fontFamily="@font/regular"
+                            android:text="weird" />
+                    </com.google.android.material.chip.ChipGroup>
+                </HorizontalScrollView>
+            </RelativeLayout>
+
+            <com.facebook.shimmer.ShimmerFrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                android:id="@+id/shimmer_for_sr_fragment">
+
+                <include layout="@layout/shimmer_for_sr"/>
+            </com.facebook.shimmer.ShimmerFrameLayout>
+
+        </RelativeLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</layout>

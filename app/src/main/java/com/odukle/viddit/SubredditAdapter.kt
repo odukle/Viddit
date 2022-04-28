@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.odukle.viddit.Helper.Companion.FOR_SUBREDDIT
 import com.odukle.viddit.Helper.Companion.backstack
 import com.odukle.viddit.Helper.Companion.imageLoadingListener
 import com.odukle.viddit.Helper.Companion.videoAdapter
@@ -56,10 +55,10 @@ class SubredditAdapter(
                         .into(ivThumb)
                 }
 
-                //////////////////////////////////////////////////////SOCL
+                //////////////////////////////////////////////////////ocl
                 ivThumb.setOnClickListener {
                     val fragment = MainFragment.newInstance(post.subredditPrefixed, "", position, FOR_SUBREDDIT)
-                    videoAdapter = VideoAdapter(list, post.subredditPrefixed, fragment, order, time)
+                    videoAdapter = VideoAdapter(list, post.subredditPrefixed, order, time, passedFragment = fragment)
                     val fragmentTxn = main.supportFragmentManager.beginTransaction()
                     fragmentTxn.replace(R.id.container, fragment)
                     fragmentTxn.addToBackStack("${backstack++}")
@@ -67,7 +66,7 @@ class SubredditAdapter(
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "onBindViewHolder: ${e.stackTraceToString()}", )
+            Log.e(TAG, "onBindViewHolder: ${e.stackTraceToString()}" )
         }
     }
 
@@ -102,7 +101,7 @@ class SubredditAdapter(
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "onViewAttachedToWindow: ${e.stackTraceToString()}", )
+            Log.e(TAG, "onViewAttachedToWindow: ${e.stackTraceToString()}" )
         }
         super.onViewAttachedToWindow(holder)
     }

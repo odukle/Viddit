@@ -1,6 +1,7 @@
 package com.odukle.viddit
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,7 +19,6 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputEditText
 import com.google.common.base.CharMatcher
 import com.google.gson.JsonParser
-import com.odukle.viddit.Helper.Companion.SUBREDDIT
 import com.odukle.viddit.Helper.Companion.getVideos
 import com.odukle.viddit.Helper.Companion.isOnline
 import com.odukle.viddit.Helper.Companion.subredditAdapter
@@ -83,7 +83,8 @@ class SubRedditFragment : Fragment() {
 
             if (subredditName == subReddit.title && subredditAdapter != null) {
                 rvSubreddit.adapter = subredditAdapter
-                rvSubreddit.layoutManager = GridLayoutManager(requireContext(), 3)
+                val spanCount = if (getOrientation() == Configuration.ORIENTATION_LANDSCAPE) 4 else 3
+                rvSubreddit.layoutManager = GridLayoutManager(requireContext(), spanCount)
                 cardLoadMore.animate().translationY(500f).duration = 500
 
                 runAfter(500) {
@@ -137,16 +138,17 @@ class SubRedditFragment : Fragment() {
                 }
             }
 
+            bottomSheetDialogCF = BottomSheetDialog(main)
+            cfBinder = DataBindingUtil.inflate(
+                LayoutInflater.from(main),
+                R.layout.bottomsheet_custom_feeds,
+                null,
+                false
+            )
+            bottomSheetDialogCF.setContentView(cfBinder.root)
+
             chipAddToCf.setOnClickListener {
                 chipAddToCf.bounce()
-                bottomSheetDialogCF = BottomSheetDialog(main)
-                cfBinder = DataBindingUtil.inflate(
-                    LayoutInflater.from(main),
-                    R.layout.bottomsheet_custom_feeds,
-                    null,
-                    false
-                )
-                bottomSheetDialogCF.setContentView(cfBinder.root)
                 bottomSheetDialogCF.show()
                 addFeedViewToCf()
                 subredditToAddOrRemove = subReddit.titlePrefixed.replace("r/", "")
@@ -267,6 +269,7 @@ class SubRedditFragment : Fragment() {
 
     override fun onDestroyView() {
         Log.d(TAG, "onDestroyView: called")
+        bottomSheetDialogCF.dismiss()
         subredditAdapter = try {
             adapter
         } catch (e: Exception) {
@@ -293,7 +296,8 @@ class SubRedditFragment : Fragment() {
                             try {
                                 adapter = SubredditAdapter(vList, this@SubRedditFragment, order, time)
                                 rvSubreddit.adapter = adapter
-                                rvSubreddit.layoutManager = CustomGLM(requireContext(), 3)
+                                val spanCount = if (getOrientation() == Configuration.ORIENTATION_LANDSCAPE) 4 else 3
+                                rvSubreddit.layoutManager = CustomGLM(requireContext(), spanCount)
                                 cardLoadMore.animate().translationY(500f).duration = 500
 
                                 runAfter(500) {

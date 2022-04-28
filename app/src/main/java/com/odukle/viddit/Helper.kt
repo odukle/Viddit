@@ -6,7 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.util.Log
-        import android.view.View
+import android.view.View
 import androidx.annotation.Nullable
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -44,14 +44,6 @@ class Helper {
         var videoAdapter: VideoAdapter? = null
         var videoAdapterForMain: VideoAdapter? = null
         var searchAdapter: SearchAdapter? = null
-
-        /////////////////////////////////////////////////////////////KEYS
-        const val SUBREDDIT = "subreddit"
-        const val AFTER = "after"
-        const val RV_POSITION = "after"
-        const val CALLED_FOR = "calledFor"
-        const val FOR_SUBREDDIT = "calledForSR"
-        const val FOR_MAIN = "calledForMAIN"
 
         suspend fun getVideos(
             subreddit: String,

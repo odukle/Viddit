@@ -1,6 +1,7 @@
 package com.odukle.viddit
 
 import android.annotation.SuppressLint
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -20,12 +21,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.common.base.CharMatcher
 import com.google.gson.JsonParser
-import com.odukle.viddit.Helper.Companion.AFTER
-import com.odukle.viddit.Helper.Companion.CALLED_FOR
-import com.odukle.viddit.Helper.Companion.FOR_MAIN
-import com.odukle.viddit.Helper.Companion.FOR_SUBREDDIT
-import com.odukle.viddit.Helper.Companion.RV_POSITION
-import com.odukle.viddit.Helper.Companion.SUBREDDIT
 import com.odukle.viddit.Helper.Companion.currentPlayer
 import com.odukle.viddit.Helper.Companion.getSubredditInfo
 import com.odukle.viddit.Helper.Companion.getUserIcon
@@ -57,6 +52,7 @@ class MainFragment : Fragment() {
     lateinit var binder: FragmentMainBinding
     lateinit var commentsBinder: LayoutCommentsBinding
     private lateinit var menuBinder: LayoutMenuBinding
+    lateinit var bottomSheetDialog: BottomSheetDialog
     private lateinit var adapter: VideoAdapter
     lateinit var pool: ExoPool
     lateinit var subreddit: String
@@ -174,7 +170,7 @@ class MainFragment : Fragment() {
                         btnBackToMain.text = "Go back to main feed"
                     }
                     val name = chip.tag.toString()
-                    val reddit = main.redditHelper.reddit
+                    val reddit = getReddit()
                     if (reddit != null) {
                         if (videoAdapter != null && videoAdapter!!.calledFor == name) {
                             chipGroupCf.show()
@@ -212,7 +208,7 @@ class MainFragment : Fragment() {
                 }
             }
 
-            val bottomSheetDialog = BottomSheetDialog(main)
+            bottomSheetDialog = BottomSheetDialog(main)
             menuBinder = DataBindingUtil.inflate(
                 LayoutInflater.from(main),
                 R.layout.layout_menu,
@@ -221,7 +217,7 @@ class MainFragment : Fragment() {
             )
             bottomSheetDialog.setContentView(menuBinder.root)
             menuBinder.apply {
-                val reddit = main.redditHelper.reddit
+                val reddit = getReddit()
                 if (reddit == null) {
                     layoutUser.hide()
                     layoutSignIn.show()
@@ -376,7 +372,7 @@ class MainFragment : Fragment() {
         binder.layoutEmptyFeed.apply {
             if (vList.isEmpty()) show() else hide()
         }
-        adapter = VideoAdapter(vList, "", this@MainFragment, "", "", pages)
+        adapter = VideoAdapter(vList, "", "", "", pages)
         adapter.content = CUSTOM_FEED
         adapter.loadGifsExternally = true
         runMain {
@@ -447,6 +443,9 @@ class MainFragment : Fragment() {
                         vpViddit.scrollToPosition(rvPosition)
                     }
                 }
+                if (getOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
+
+                }
                 refreshLayout.isRefreshing = false
                 //
                 if (adapter?.content == CUSTOM_FEED) {
@@ -462,7 +461,7 @@ class MainFragment : Fragment() {
                     binder.apply {
                         if (refresh || !doShuffle) refreshLayout.isRefreshing = true
 
-                        adapter = VideoAdapter(mutableListOf(), subreddit, this@MainFragment)
+                        adapter = VideoAdapter(mutableListOf(), subreddit)
                         adapter.content = MAIN_FEED
                         val lastPost = try {
                             val unList = mutableListOf<Video>()
@@ -502,7 +501,7 @@ class MainFragment : Fragment() {
     private fun populateRV(multiReddit: String) {
 
         this.subreddit = multiReddit
-        adapter = VideoAdapter(mutableListOf(), multiReddit, this@MainFragment)
+        adapter = VideoAdapter(mutableListOf(), multiReddit)
         adapter.content = MAIN_FEED
         job?.cancel()
         job = ioScope().launch {
@@ -555,6 +554,7 @@ class MainFragment : Fragment() {
 
     override fun onDestroyView() {
         currentPlayer?.let { pool.release(it) }
+        bottomSheetDialog.dismiss()
         super.onDestroyView()
     }
 

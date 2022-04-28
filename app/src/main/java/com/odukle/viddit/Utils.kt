@@ -32,7 +32,11 @@ import net.dean.jraw.RedditClient
 import net.dean.jraw.http.HttpRequest
 import java.util.*
 
-
+/////////////////////////////////////////////////////////////KEYS
+const val AFTER = "after"
+const val CALLED_FOR = "calledFor"
+const val FOR_SUBREDDIT = "calledForSR"
+const val FOR_MAIN = "calledForMAIN"
 const val NSFW = "nsfw"
 const val POPULAR = "popular"
 const val MEMES = "meme"
@@ -45,6 +49,11 @@ const val ADD = "Add"
 const val REMOVE = "Remove"
 const val GO_BACK_TO_MAIN_FEED = "Go back to main feed"
 const val GO_TO_CUSTOM_FEED = "Go to your custom feeds"
+const val RV_POSITION = "rvPosition"
+const val FRAGMENT = "fragment"
+const val MAIN = "main"
+const val SUBREDDIT = "subreddit"
+const val SEARCH = "search"
 
 fun Float.toDp(): Int {
     return TypedValue.applyDimension(
@@ -292,6 +301,7 @@ fun addSubRedditToCf(reddit: RedditClient, name: String) {
 }
 
 fun getCurrentFragment() = main.supportFragmentManager.findFragmentById(R.id.container)
+fun getOrientation() = main.resources.configuration.orientation
 fun getReddit() = main.redditHelper.reddit
 
 const val blockCharacterSet = "~`!@#$%^&*()_-+=|\\}]{[:;'\"?/>.<,₹" //Special characters to block

@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebSettings
@@ -15,7 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.odukle.viddit.Helper.Companion.FOR_MAIN
+import com.odukle.viddit.Helper.Companion.backstack
 import com.odukle.viddit.Helper.Companion.currentPlayer
 import com.odukle.viddit.Helper.Companion.tempPost
 import com.odukle.viddit.Helper.Companion.videoList
@@ -107,7 +108,8 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             111 -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    VideoAdapter.startDownloading(tempPost)
+                    val videoBinder = ((getCurrentFragment() as MainFragment).binder.vpViddit.adapter as VideoAdapter).binder
+                    VideoAdapter.startDownloading(tempPost, videoBinder)
                 } else {
                     shortToast("Permission denied")
                 }
@@ -118,12 +120,68 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
-//        redditHelper.onOAuthResult(intent)
+//        redditHelper.init()
     }
 
     companion object {
         lateinit var main: MainActivity
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        when (val fragment = getCurrentFragment()) {
+            is MainFragment -> {
+                fragment.binder.apply {
+                    val pos = (vpViddit.adapter as VideoAdapter).middleHolderPos
+                    outState.putInt(RV_POSITION, pos)
+                    outState.putString(FRAGMENT, MAIN)
+                }
+            }
+
+            is SubRedditFragment -> {
+                val subreddit = fragment.subReddit
+                val isUser = fragment.isUser
+                outState.putParcelable(SUBREDDIT, subreddit)
+                outState.putBoolean(IS_USER, isUser)
+                outState.putString(FRAGMENT, SUBREDDIT)
+            }
+
+            is SearchFragment -> {
+                outState.putString(FRAGMENT, SEARCH)
+            }
+        }
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        when (savedInstanceState.getString(FRAGMENT)) {
+            MAIN -> {
+                Log.d(TAG, "onRestoreInstanceState: called")
+                val fragment = getCurrentFragment() as MainFragment
+                val pos = savedInstanceState.getInt(RV_POSITION)
+                fragment.binder.vpViddit.scrollToPosition(pos)
+            }
+
+            SUBREDDIT -> {
+                val subreddit = savedInstanceState.getParcelable<SubReddit>(SUBREDDIT)
+                val isUser = savedInstanceState.getBoolean(IS_USER)
+                if (subreddit != null) {
+                    val fragment = SubRedditFragment.newInstance(subreddit, isUser)
+                    val txn = supportFragmentManager.beginTransaction()
+                    txn.replace(R.id.container,fragment)
+                    txn.addToBackStack("${++backstack}")
+                    txn.commit()
+                }
+            }
+
+            SEARCH -> {
+                val fragment = SearchFragment.newInstance()
+                val txn = supportFragmentManager.beginTransaction()
+                txn.replace(R.id.container,fragment)
+                txn.addToBackStack("${++backstack}")
+                txn.commit()
+            }
+        }
+        super.onRestoreInstanceState(savedInstanceState)
     }
 
     fun openInsta(view: View) {
