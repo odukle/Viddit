@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.utils
 
 const val BASE_URL = "https://oauth.reddit.com"
 const val USER_AGENT = "Viddit by odukle"

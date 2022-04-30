@@ -8,10 +8,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.chip.Chip
 import com.google.android.material.snackbar.Snackbar
-import com.odukle.viddit.Helper.Companion.backstack
-import com.odukle.viddit.Helper.Companion.isOnline
+import com.odukle.viddit.utils.Helper.Companion.backstack
+import com.odukle.viddit.utils.Helper.Companion.isOnline
 import com.odukle.viddit.MainActivity.Companion.main
 import com.odukle.viddit.databinding.ItemViewSearchBinding
+import com.odukle.viddit.utils.Helper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch

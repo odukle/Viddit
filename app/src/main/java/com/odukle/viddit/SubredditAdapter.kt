@@ -7,11 +7,12 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.odukle.viddit.Helper.Companion.backstack
-import com.odukle.viddit.Helper.Companion.imageLoadingListener
-import com.odukle.viddit.Helper.Companion.videoAdapter
+import com.odukle.viddit.utils.Helper.Companion.backstack
+import com.odukle.viddit.utils.Helper.Companion.imageLoadingListener
+import com.odukle.viddit.utils.Helper.Companion.videoAdapter
 import com.odukle.viddit.MainActivity.Companion.main
 import com.odukle.viddit.databinding.ItemViewSubredditBinding
+import com.odukle.viddit.utils.Helper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

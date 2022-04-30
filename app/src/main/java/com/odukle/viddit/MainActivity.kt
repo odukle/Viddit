@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.WebSettings
@@ -15,12 +16,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.analytics.FirebaseAnalytics
-import com.odukle.viddit.Helper.Companion.backstack
-import com.odukle.viddit.Helper.Companion.currentPlayer
-import com.odukle.viddit.Helper.Companion.tempPost
-import com.odukle.viddit.Helper.Companion.videoList
 import com.odukle.viddit.databinding.ActivityMainBinding
+import com.odukle.viddit.databinding.BottomSheetDownloadBinding
+import com.odukle.viddit.utils.Helper.Companion.backstack
+import com.odukle.viddit.utils.Helper.Companion.currentPlayer
+import com.odukle.viddit.utils.Helper.Companion.tempPost
+import com.odukle.viddit.utils.Helper.Companion.videoList
+import com.odukle.viddit.utils.IS_USER
 
 
 private const val TAG = "MainActivity"
@@ -54,8 +58,6 @@ class MainActivity : AppCompatActivity() {
         currentPlayer = null
         ///
 
-        val cookieManager: CookieManager = CookieManager.getInstance()
-
         val webView = binder.browser
         val ws = webView.settings
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -67,6 +69,31 @@ class MainActivity : AppCompatActivity() {
         val fragmentTxn = supportFragmentManager.beginTransaction()
         fragmentTxn.replace(R.id.container, MainFragment.newInstance("r/popular", "", 0, FOR_MAIN))
         fragmentTxn.commit()
+
+        if (intent.action == Intent.ACTION_SEND) {
+            handleIntent(intent)
+        }
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val link = intent.getStringExtra(Intent.EXTRA_TEXT)
+        if (link != null) {
+            if (link.contains("reddit.com")) {
+                val dialog = BottomSheetDialog(this)
+                val dBinder = DataBindingUtil.inflate<BottomSheetDownloadBinding>(
+                    LayoutInflater.from(main),
+                    R.layout.bottom_sheet_download,
+                    null,
+                    false
+                )
+
+                dialog.setContentView(dBinder.root)
+
+                dBinder.apply {
+
+                }
+            }
+        }
     }
 
     fun longToast(text: String) {

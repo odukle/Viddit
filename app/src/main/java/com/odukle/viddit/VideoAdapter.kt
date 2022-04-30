@@ -23,8 +23,6 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.core.view.children
-import androidx.core.view.get
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
@@ -38,15 +36,16 @@ import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
-import com.odukle.viddit.Helper.Companion.backstack
-import com.odukle.viddit.Helper.Companion.currentPlayer
-import com.odukle.viddit.Helper.Companion.getGifMp4
-import com.odukle.viddit.Helper.Companion.getSubredditInfo
-import com.odukle.viddit.Helper.Companion.getUserIcon
-import com.odukle.viddit.Helper.Companion.getVideos
-import com.odukle.viddit.Helper.Companion.isOnline
+import com.odukle.viddit.utils.Helper.Companion.backstack
+import com.odukle.viddit.utils.Helper.Companion.currentPlayer
+import com.odukle.viddit.utils.Helper.Companion.getGifMp4
+import com.odukle.viddit.utils.Helper.Companion.getSubredditInfo
+import com.odukle.viddit.utils.Helper.Companion.getUserIcon
+import com.odukle.viddit.utils.Helper.Companion.getVideos
+import com.odukle.viddit.utils.Helper.Companion.isOnline
 import com.odukle.viddit.MainActivity.Companion.main
 import com.odukle.viddit.databinding.ItemViewVideoBinding
+import com.odukle.viddit.utils.Helper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -666,31 +665,31 @@ class VideoAdapter(
                         layout.addView(tvBody)
                     }
 
-                    tvBody.setOnLongClickListener {
-                        layout.children.forEach { child ->
-                            if (layout.indexOfChild(child) > 1
-                                && layout.childCount > 3
-                                && layout.indexOfChild(child) != layout.childCount - 1
-                            ) {
-                                try {
-                                    child.apply {
-                                        visibility = if (isVisible) {
-                                            (layout[layout.childCount - 1] as TextView).text = "Show replies..."
-                                            (layout[layout.childCount - 1] as TextView).setTextColor(main.getColor(android.R.color.holo_green_light))
-                                            View.GONE
-                                        } else {
-                                            (layout[layout.childCount - 1] as TextView).text = "Hide replies"
-                                            (layout[layout.childCount - 1] as TextView).setTextColor(main.getColor(android.R.color.holo_red_light))
-                                            View.VISIBLE
-                                        }
-                                    }
-                                } catch (e: Exception) {
-                                }
-                            }
-                        }
-
-                        true
-                    }
+//                    tvBody.setOnLongClickListener {
+//                        layout.children.forEach { child ->
+//                            if (layout.indexOfChild(child) > 1
+//                                && layout.childCount > 3
+//                                && layout.indexOfChild(child) != layout.childCount - 1
+//                            ) {
+//                                try {
+//                                    child.apply {
+//                                        if (isVisible) {
+//                                            (layout[layout.childCount - 1] as TextView).text = "Show replies..."
+//                                            (layout[layout.childCount - 1] as TextView).setTextColor(main.getColor(android.R.color.holo_green_light))
+//                                            hide()
+//                                        } else {
+//                                            (layout[layout.childCount - 1] as TextView).text = "Hide replies"
+//                                            (layout[layout.childCount - 1] as TextView).setTextColor(main.getColor(android.R.color.holo_red_light))
+//                                            show()
+//                                        }
+//                                    }
+//                                } catch (e: Exception) {
+//                                }
+//                            }
+//                        }
+//
+//                        true
+//                    }
                 }
 
                 if (score != "null") {
@@ -742,6 +741,8 @@ class VideoAdapter(
                             }
                         }
                     }
+
+                    runAfter(200) { tv.performClick() }
                 }
 
             }

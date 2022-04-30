@@ -201,6 +201,15 @@
                             android:text="funny" />
 
                         <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_interesting"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checkable="true"
+                            android:tag="user/odukle/m/interesting"
+                            android:fontFamily="@font/regular"
+                            android:text="interesting" />
+
+                        <com.google.android.material.chip.Chip
                             android:id="@+id/chip_weird"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -208,6 +217,15 @@
                             android:tag="user/odukle/m/weird"
                             android:fontFamily="@font/regular"
                             android:text="weird" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_dank"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checkable="true"
+                            android:tag="user/odukle/m/dank"
+                            android:fontFamily="@font/regular"
+                            android:text="dank" />
                     </com.google.android.material.chip.ChipGroup>
                 </HorizontalScrollView>
             </RelativeLayout>

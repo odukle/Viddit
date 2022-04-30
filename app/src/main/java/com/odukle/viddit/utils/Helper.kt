@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.utils
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -16,6 +16,7 @@ import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.target.Target
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.gson.JsonParser
+import com.odukle.viddit.*
 import com.odukle.viddit.MainActivity.Companion.main
 import com.odukle.viddit.databinding.ItemViewSubredditBinding
 import kotlinx.coroutines.Dispatchers.IO

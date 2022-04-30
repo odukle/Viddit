@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.utils
 
 import android.content.Context
 import android.util.Log
