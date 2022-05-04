@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.adapters
 
 import android.util.Log
 import android.view.LayoutInflater
@@ -7,12 +7,18 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.odukle.viddit.FOR_SUBREDDIT
+import com.odukle.viddit.MainActivity.Companion.main
+import com.odukle.viddit.R
+import com.odukle.viddit.databinding.ItemViewSubredditBinding
+import com.odukle.viddit.fragments.MainFragment
+import com.odukle.viddit.fragments.SubRedditFragment
+import com.odukle.viddit.models.Video
+import com.odukle.viddit.runAfter
+import com.odukle.viddit.utils.Helper
 import com.odukle.viddit.utils.Helper.Companion.backstack
 import com.odukle.viddit.utils.Helper.Companion.imageLoadingListener
 import com.odukle.viddit.utils.Helper.Companion.videoAdapter
-import com.odukle.viddit.MainActivity.Companion.main
-import com.odukle.viddit.databinding.ItemViewSubredditBinding
-import com.odukle.viddit.utils.Helper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

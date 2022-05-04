@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.models
 
 class MultiReddit (
     val name: String,

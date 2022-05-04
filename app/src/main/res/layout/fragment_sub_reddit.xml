@@ -6,7 +6,7 @@
     <data>
         <variable
             name="SubredditFragment"
-            type="com.odukle.viddit.SubRedditFragment" />
+            type="com.odukle.viddit.fragments.SubRedditFragment" />
     </data>
 
     <RelativeLayout

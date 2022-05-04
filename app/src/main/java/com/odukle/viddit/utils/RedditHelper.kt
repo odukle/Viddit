@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.utils
 
 import android.graphics.Bitmap
 import android.util.Log
@@ -6,8 +6,11 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.odukle.viddit.App.Companion.accountHelper
 import com.odukle.viddit.App.Companion.tokenStore
+import com.odukle.viddit.BuildConfig
 import com.odukle.viddit.MainActivity.Companion.main
-import com.odukle.viddit.utils.REFRESH_TOKEN
+import com.odukle.viddit.hide
+import com.odukle.viddit.mainScope
+import com.odukle.viddit.show
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.delay
@@ -23,15 +26,6 @@ import net.dean.jraw.pagination.DefaultPaginator
 
 
 private const val TAG = "RedditHelper"
-private const val AUTH_URL = "https://www.reddit.com/api/v1/authorize.compact?client_id=%s" +
-        "&response_type=code&state=%s&redirect_uri=%s&" +
-        "duration=permanent&scope=identity edit history read save submit subscribe vote"
-private const val CLIENT_ID = "dpM8BKY1nsPNYYwhwpeYIg"
-
-//TODO hide client id
-private const val REDIRECT_URI = "https://odukle.github.io/"
-private const val STATE = "MY_RANDOM_STRING_1"
-private const val ACCESS_TOKEN_URL = "https://www.reddit.com/api/v1/access_token"
 
 suspend fun getSubmissionPages(reddit: RedditClient, title: String): DefaultPaginator<Submission> = withContext(IO) {
     val multi = reddit.me().multi(title)
@@ -40,10 +34,7 @@ suspend fun getSubmissionPages(reddit: RedditClient, title: String): DefaultPagi
 
 class RedditHelper {
 
-    //    lateinit var accessToken: String
-//    lateinit var refreshToken: String
-//    lateinit var credentials: Credentials
-    lateinit var adapter: OkHttpNetworkAdapter
+    private lateinit var adapter: OkHttpNetworkAdapter
     lateinit var authHelper: StatefulAuthHelper
     var reddit: RedditClient? = null
 
@@ -81,7 +72,6 @@ class RedditHelper {
                         reddit = authHelper.onUserChallenge(url)
                         reddit!!.autoRenew = true
                         reddit!!.authManager.refreshToken?.let {
-                            putPref(REFRESH_TOKEN, it)
                             reddit!!.authManager.current?.let { it1 -> tokenStore.storeLatest(reddit!!.authManager.currentUsername(), it1) }
                             tokenStore.storeRefreshToken(reddit!!.authManager.currentUsername(), it)
                         }

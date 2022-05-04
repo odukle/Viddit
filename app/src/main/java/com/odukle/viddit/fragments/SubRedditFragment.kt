@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.fragments
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.RelativeLayout
-import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
@@ -19,15 +18,18 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputEditText
 import com.google.common.base.CharMatcher
 import com.google.gson.JsonParser
+import com.odukle.viddit.*
+import com.odukle.viddit.MainActivity.Companion.main
+import com.odukle.viddit.adapters.SubredditAdapter
+import com.odukle.viddit.databinding.BottomsheetCustomFeedsBinding
+import com.odukle.viddit.databinding.FragmentSubRedditBinding
+import com.odukle.viddit.models.MultiReddit
+import com.odukle.viddit.models.SubReddit
+import com.odukle.viddit.utils.CustomGLM
 import com.odukle.viddit.utils.Helper.Companion.getVideos
 import com.odukle.viddit.utils.Helper.Companion.isOnline
 import com.odukle.viddit.utils.Helper.Companion.subredditAdapter
 import com.odukle.viddit.utils.Helper.Companion.subredditName
-import com.odukle.viddit.MainActivity.Companion.main
-import com.odukle.viddit.databinding.BottomsheetCustomFeedsBinding
-import com.odukle.viddit.databinding.FragmentSubRedditBinding
-import com.odukle.viddit.utils.CustomGLM
-import com.odukle.viddit.utils.IS_USER
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main

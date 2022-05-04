@@ -4,7 +4,7 @@
     <data>
         <variable
             name="SubredditAdapter"
-            type="com.odukle.viddit.SubredditAdapter" />
+            type="com.odukle.viddit.adapters.SubredditAdapter" />
     </data>
 
     <RelativeLayout

@@ -7,7 +7,7 @@
 
         <variable
             name="SearchFragment"
-            type="com.odukle.viddit.SearchFragment" />
+            type="com.odukle.viddit.fragments.SearchFragment" />
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout

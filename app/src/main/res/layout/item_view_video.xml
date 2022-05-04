@@ -7,7 +7,7 @@
 
         <variable
             name="VideoAdapter"
-            type="com.odukle.viddit.VideoAdapter" />
+            type="com.odukle.viddit.adapters.VideoAdapter" />
     </data>
 
     <RelativeLayout
@@ -19,6 +19,15 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:show_buffering="always" />
+
+<!--        <Button-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:id="@+id/test"-->
+<!--            android:layout_above="@id/layout_post_details"-->
+<!--            android:layout_centerHorizontal="true"-->
+<!--            android:layout_marginBottom="20dp"-->
+<!--            android:text="test"/>-->
 
         <LinearLayout
             android:id="@+id/layout_post_details"

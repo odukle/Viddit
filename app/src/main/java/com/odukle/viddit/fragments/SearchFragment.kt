@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.fragments
 
 import android.os.Build
 import android.os.Bundle
@@ -18,15 +18,18 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.common.base.CharMatcher
 import com.google.gson.JsonParser
-import com.odukle.viddit.utils.Helper.Companion.getTopSubreddits
-import com.odukle.viddit.utils.Helper.Companion.searchAdapter
-import com.odukle.viddit.utils.Helper.Companion.searchQuery
+import com.odukle.viddit.*
 import com.odukle.viddit.MainActivity.Companion.main
+import com.odukle.viddit.adapters.SearchAdapter
 import com.odukle.viddit.databinding.BottomsheetCustomFeedsBinding
 import com.odukle.viddit.databinding.FragmentSearchBinding
 import com.odukle.viddit.databinding.LayoutMenuBinding
+import com.odukle.viddit.models.MultiReddit
 import com.odukle.viddit.utils.CustomLLM
 import com.odukle.viddit.utils.Helper
+import com.odukle.viddit.utils.Helper.Companion.getTopSubreddits
+import com.odukle.viddit.utils.Helper.Companion.searchAdapter
+import com.odukle.viddit.utils.Helper.Companion.searchQuery
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -191,6 +194,7 @@ class SearchFragment : Fragment() {
                 if (isChecked) {
                     allowNSFW()
                     if (!etSearch.text.isNullOrEmpty()) btnSearch.performClick()
+
                 } else {
                     doNotAllowNSFW()
                     if (!etSearch.text.isNullOrEmpty()) btnSearch.performClick()

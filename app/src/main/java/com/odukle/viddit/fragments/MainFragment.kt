@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.fragments
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
@@ -21,6 +21,17 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.common.base.CharMatcher
 import com.google.gson.JsonParser
+import com.odukle.viddit.*
+import com.odukle.viddit.MainActivity.Companion.main
+import com.odukle.viddit.adapters.VideoAdapter
+import com.odukle.viddit.databinding.FragmentMainBinding
+import com.odukle.viddit.databinding.LayoutCommentsBinding
+import com.odukle.viddit.databinding.LayoutMenuBinding
+import com.odukle.viddit.models.MultiReddit
+import com.odukle.viddit.models.Video
+import com.odukle.viddit.utils.CustomLLM
+import com.odukle.viddit.utils.ExoPool
+import com.odukle.viddit.utils.Helper
 import com.odukle.viddit.utils.Helper.Companion.currentPlayer
 import com.odukle.viddit.utils.Helper.Companion.getSubredditInfo
 import com.odukle.viddit.utils.Helper.Companion.getUserIcon
@@ -29,13 +40,7 @@ import com.odukle.viddit.utils.Helper.Companion.snapHelper
 import com.odukle.viddit.utils.Helper.Companion.videoAdapter
 import com.odukle.viddit.utils.Helper.Companion.videoAdapterForMain
 import com.odukle.viddit.utils.Helper.Companion.videoList
-import com.odukle.viddit.MainActivity.Companion.main
-import com.odukle.viddit.databinding.FragmentMainBinding
-import com.odukle.viddit.databinding.LayoutCommentsBinding
-import com.odukle.viddit.databinding.LayoutMenuBinding
-import com.odukle.viddit.utils.CustomLLM
-import com.odukle.viddit.utils.ExoPool
-import com.odukle.viddit.utils.Helper
+import com.odukle.viddit.utils.getSubmissionPages
 import kotlinx.android.synthetic.main.fragment_main.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO

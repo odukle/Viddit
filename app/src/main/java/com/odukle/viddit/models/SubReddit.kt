@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.models
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize

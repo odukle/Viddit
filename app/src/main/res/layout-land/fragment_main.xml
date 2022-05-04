@@ -7,7 +7,7 @@
 
         <variable
             name="MainFragment"
-            type="com.odukle.viddit.MainFragment" />
+            type="com.odukle.viddit.fragments.MainFragment" />
     </data>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

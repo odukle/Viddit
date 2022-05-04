@@ -1,6 +1,7 @@
 package com.odukle.viddit
 
 import android.animation.ObjectAnimator
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -18,19 +19,25 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.chip.Chip
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.shape.CornerFamily
+import com.google.gson.JsonParser
 import com.odukle.viddit.MainActivity.Companion.main
 import com.odukle.viddit.databinding.*
+import com.odukle.viddit.fragments.SearchFragment
+import com.odukle.viddit.models.AboutPost
+import com.odukle.viddit.models.MultiReddit
 import com.odukle.viddit.utils.Helper
+import com.odukle.viddit.utils.Helper.Companion.isOnline
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.dean.jraw.Endpoint
 import net.dean.jraw.JrawUtils
 import net.dean.jraw.RedditClient
 import net.dean.jraw.http.HttpRequest
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.util.*
 
 /////////////////////////////////////////////////////////////KEYS
@@ -55,6 +62,9 @@ const val FRAGMENT = "fragment"
 const val MAIN = "main"
 const val SUBREDDIT = "subreddit"
 const val SEARCH = "search"
+const val IS_USER = "isUser"
+const val ACCOUNT = "account"
+/////////////////////////////////////////////////
 
 fun Float.toDp(): Int {
     return TypedValue.applyDimension(
@@ -108,21 +118,6 @@ fun log(c: Class<Any>, method: Function<Any>, text: String) {
 fun nsfwAllowed(): Boolean = main.sharedPreferences.getBoolean(NSFW, false)
 fun doNotAllowNSFW() = main.sharedPreferences.edit().putBoolean(NSFW, false).apply()
 fun allowNSFW() = main.sharedPreferences.edit().putBoolean(NSFW, true).apply()
-fun putPref(key: String, data: Any) {
-    when (data) {
-        is String -> main.sharedPreferences.edit().putString(key, data).apply()
-        is Boolean -> main.sharedPreferences.edit().putBoolean(key, data).apply()
-        is Long -> main.sharedPreferences.edit().putLong(key, data).apply()
-        is Int -> main.sharedPreferences.edit().putInt(key, data).apply()
-        is Float -> main.sharedPreferences.edit().putFloat(key, data).apply()
-    }
-}
-
-fun runIO(block: () -> Unit): Job {
-    return CoroutineScope(IO).launch {
-        run(block)
-    }
-}
 
 suspend fun runMain(block: () -> Unit) {
     withContext(Main) {
@@ -134,6 +129,14 @@ fun ioScope() = CoroutineScope(IO)
 fun mainScope() = CoroutineScope(Main)
 
 suspend fun getCustomFeeds(reddit: RedditClient) = withContext(IO) {
+
+    if (!isOnline(main)) {
+        mainScope().launch {
+            main.shortToast("No internet 😔")
+        }
+        return@withContext ""
+    }
+
     val request = HttpRequest.Builder()
         .secure(true)
         .host("oauth.reddit.com")
@@ -148,6 +151,14 @@ suspend fun getCustomFeeds(reddit: RedditClient) = withContext(IO) {
 }
 
 suspend fun getMultiRedditAbout(reddit: RedditClient, title: String) = withContext(IO) {
+
+    if (!isOnline(main)) {
+        mainScope().launch {
+            main.shortToast("No internet 😔")
+        }
+        return@withContext ""
+    }
+
     val multiPath = "user/${JrawUtils.urlEncode(reddit.me().username)}/m/${JrawUtils.urlEncode(title)}"
     val request = HttpRequest.Builder()
         .secure(true)
@@ -161,6 +172,108 @@ suspend fun getMultiRedditAbout(reddit: RedditClient, title: String) = withConte
 
     Log.d(TAG, "getMultiRedditAbout: ${res.body}")
     res.body
+}
+
+suspend fun getAboutPost(link: String): AboutPost = withContext(IO) {
+
+    if (!isOnline(main)) {
+        mainScope().launch {
+            main.shortToast("No internet 😔")
+        }
+    }
+
+    try {
+        val uri = "$link.json?raw_json=1"
+        val part1 = uri.substring(0, uri.indexOf("?") + 1)
+        val part2 = uri.substring(uri.lastIndexOf("?") + 1)
+        val url = Uri.parse("${part1.replace("?", ".json?")}$part2")
+        Log.d(TAG, "getAboutPost: $url")
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+
+        val response = client.newCall(request).execute()
+        val json = response.body?.string()
+        val array = JsonParser.parseString(json).asJsonArray
+        val post = array[0]
+            .asJsonObject["data"]
+            .asJsonObject["children"]
+            .asJsonArray[0]
+            .asJsonObject["data"]
+            .asJsonObject
+
+        val title = try {
+            post["title"].asString
+        } catch (e: Exception) {
+            "null"
+        }
+
+        val name = try {
+            post["name"].asString
+        } catch (e: Exception) {
+            "null"
+        }
+
+        val subreddit = try {
+            post["subreddit_name_prefixed"].asString
+        } catch (e: Exception) {
+            "null"
+        }
+
+        val image = try {
+            post["preview"]
+                .asJsonObject["images"]
+                .asJsonArray[0]
+                .asJsonObject["source"]
+                .asJsonObject["url"]
+                .asString
+                .replace("amp;", "")
+        } catch (e: Exception) {
+            "null"
+        }
+
+        val videoDownloadUrl = try {
+            post["media"]
+                .asJsonObject["reddit_video"]
+                .asJsonObject["fallback_url"]
+                .asString.replace("amp;", "")
+        } catch (e: Exception) {
+            "null"
+        }
+
+        val gifmp4 = try {
+            post["preview"]
+                .asJsonObject["images"]
+                .asJsonArray[0]
+                .asJsonObject["variants"]
+                .asJsonObject["mp4"]
+                .asJsonObject["source"]
+                .asJsonObject["url"]
+                .asString
+                .replace("amp;", "")
+        } catch (e: Exception) {
+            "null"
+        }
+
+        val permalink = try {
+            "https://www.reddit.com/" + post["permalink"].asString
+        } catch (e: Exception) {
+            "null"
+        }
+
+        if (gifmp4 != "null") {
+            return@withContext AboutPost(title, name, subreddit, image, gifmp4, permalink)
+        } else if (videoDownloadUrl != "null") {
+            return@withContext AboutPost(title, name, subreddit, image, videoDownloadUrl, permalink)
+        } else {
+            return@withContext AboutPost(title, name, subreddit, image, image, permalink)
+        }
+
+    } catch (e: Exception) {
+        throw e
+    }
 }
 
 var subredditToAddOrRemove: String? = null
@@ -293,12 +406,42 @@ fun addFeedView(
 }
 
 fun addSubRedditToCf(reddit: RedditClient, name: String) {
+
+    if (!isOnline(main)) {
+        mainScope().launch {
+            main.shortToast("No internet 😔")
+        }
+    }
+
     if (subredditToAddOrRemove != null) {
         main.shortToast("Adding..")
         reddit.me().multi(name).addSubreddit(subredditToAddOrRemove!!)
         main.shortToast("Added successfully 🎉")
         subredditToAddOrRemove = null
     }
+}
+
+suspend fun hasAudio(link: String) = withContext(IO) {
+
+    if (!isOnline(main)) {
+        mainScope().launch {
+            main.shortToast("No internet 😔")
+        }
+        return@withContext false
+    }
+
+    val client = OkHttpClient()
+    val url = Uri.parse("https://redditsave.com/info?url=$link")
+    Log.d(TAG, "hasAudio: $url")
+    val request = Request.Builder()
+        .url(url.toString())
+        .get()
+        .build()
+
+    val response = client.newCall(request).execute()
+    val body = response.body?.string()
+
+    !(body?.contains("audio_url=false") ?: false)
 }
 
 fun getCurrentFragment() = main.supportFragmentManager.findFragmentById(R.id.container)
@@ -310,6 +453,15 @@ val filter = InputFilter { source, _, _, _, _, _ ->
     if (source != null && blockCharacterSet.contains("" + source)) {
         ""
     } else null
+}
+
+fun String.removeSpecialChars(): String {
+    var str = this
+    blockCharacterSet.forEach {
+        str = str.replace("$it", "")
+    }
+
+    return str
 }
 
 fun View.bounce() {

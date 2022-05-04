@@ -16,15 +16,23 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
+import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.firebase.analytics.FirebaseAnalytics
+import com.odukle.viddit.adapters.VideoAdapter
 import com.odukle.viddit.databinding.ActivityMainBinding
 import com.odukle.viddit.databinding.BottomSheetDownloadBinding
+import com.odukle.viddit.fragments.MainFragment
+import com.odukle.viddit.fragments.SearchFragment
+import com.odukle.viddit.fragments.SubRedditFragment
+import com.odukle.viddit.models.SubReddit
 import com.odukle.viddit.utils.Helper.Companion.backstack
 import com.odukle.viddit.utils.Helper.Companion.currentPlayer
 import com.odukle.viddit.utils.Helper.Companion.tempPost
+import com.odukle.viddit.utils.Helper.Companion.videoAdapter
 import com.odukle.viddit.utils.Helper.Companion.videoList
-import com.odukle.viddit.utils.IS_USER
+import com.odukle.viddit.utils.RedditHelper
+import kotlinx.coroutines.launch
 
 
 private const val TAG = "MainActivity"
@@ -33,7 +41,7 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var binder: ActivityMainBinding
     lateinit var sharedPreferences: SharedPreferences
-    lateinit var toast: Toast
+    private lateinit var toast: Toast
     private lateinit var mFirebaseAnalytics: FirebaseAnalytics
 
     //
@@ -70,9 +78,6 @@ class MainActivity : AppCompatActivity() {
         fragmentTxn.replace(R.id.container, MainFragment.newInstance("r/popular", "", 0, FOR_MAIN))
         fragmentTxn.commit()
 
-        if (intent.action == Intent.ACTION_SEND) {
-            handleIntent(intent)
-        }
     }
 
     private fun handleIntent(intent: Intent) {
@@ -88,27 +93,47 @@ class MainActivity : AppCompatActivity() {
                 )
 
                 dialog.setContentView(dBinder.root)
-
-                dBinder.apply {
-
+                dialog.show()
+                try {
+                    dBinder.apply {
+                        ioScope().launch {
+                            val post = getAboutPost(link)
+                            mainScope().launch {
+                                tvTitle.text = post.title
+                                Glide.with(root).load(post.image).centerCrop().into(ivThumb)
+                                chipSubreddit.text = "Go to ${post.subreddit}"
+                                VideoAdapter.startDownloading(null, null, post, this@apply)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    main.shortToast("${e.message}")
                 }
+
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        if (intent != null) {
+            if (intent.action == Intent.ACTION_SEND) {
+                handleIntent(intent)
+            }
+        }
+        super.onNewIntent(intent)
     }
 
     fun longToast(text: String) {
         runOnUiThread {
             toast.cancel()
-            toast = Toast.makeText(this, text, Toast.LENGTH_LONG)
-            toast.show()
+            toast = Toast.makeText(this, text, Toast.LENGTH_LONG).apply { show() }
         }
     }
 
     fun shortToast(text: String) {
         runOnUiThread {
             toast.cancel()
-            toast = Toast.makeText(this, text, Toast.LENGTH_SHORT)
-            toast.show()
+            toast = Toast.makeText(this, text, Toast.LENGTH_SHORT).apply { show() }
         }
     }
 
@@ -145,11 +170,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-//        redditHelper.init()
-    }
-
     companion object {
         lateinit var main: MainActivity
     }
@@ -159,6 +179,7 @@ class MainActivity : AppCompatActivity() {
             is MainFragment -> {
                 fragment.binder.apply {
                     val pos = (vpViddit.adapter as VideoAdapter).middleHolderPos
+                    videoAdapter = vpViddit.adapter as VideoAdapter
                     outState.putInt(RV_POSITION, pos)
                     outState.putString(FRAGMENT, MAIN)
                 }
@@ -180,11 +201,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+
         when (savedInstanceState.getString(FRAGMENT)) {
             MAIN -> {
                 Log.d(TAG, "onRestoreInstanceState: called")
                 val fragment = getCurrentFragment() as MainFragment
                 val pos = savedInstanceState.getInt(RV_POSITION)
+                fragment.binder.vpViddit.adapter = videoAdapter
                 fragment.binder.vpViddit.scrollToPosition(pos)
             }
 
@@ -194,7 +217,7 @@ class MainActivity : AppCompatActivity() {
                 if (subreddit != null) {
                     val fragment = SubRedditFragment.newInstance(subreddit, isUser)
                     val txn = supportFragmentManager.beginTransaction()
-                    txn.replace(R.id.container,fragment)
+                    txn.replace(R.id.container, fragment)
                     txn.addToBackStack("${++backstack}")
                     txn.commit()
                 }
@@ -203,7 +226,7 @@ class MainActivity : AppCompatActivity() {
             SEARCH -> {
                 val fragment = SearchFragment.newInstance()
                 val txn = supportFragmentManager.beginTransaction()
-                txn.replace(R.id.container,fragment)
+                txn.replace(R.id.container, fragment)
                 txn.addToBackStack("${++backstack}")
                 txn.commit()
             }
@@ -254,7 +277,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun clearCookies() {
-        CookieManager.getInstance().removeAllCookies(null);
-        CookieManager.getInstance().flush();
+        CookieManager.getInstance().removeAllCookies(null)
+        CookieManager.getInstance().flush()
     }
 }

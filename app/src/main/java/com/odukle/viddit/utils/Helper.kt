@@ -18,8 +18,14 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.gson.JsonParser
 import com.odukle.viddit.*
 import com.odukle.viddit.MainActivity.Companion.main
+import com.odukle.viddit.adapters.SearchAdapter
+import com.odukle.viddit.adapters.SubredditAdapter
+import com.odukle.viddit.adapters.VideoAdapter
 import com.odukle.viddit.databinding.ItemViewSubredditBinding
+import com.odukle.viddit.models.SubReddit
+import com.odukle.viddit.models.Video
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.*
 import java.net.SocketTimeoutException
@@ -57,7 +63,7 @@ class Helper {
             Log.d(TAG, "getVideos: called")
             if (!isOnline(main)) {
                 main.runOnUiThread {
-                    main.longToast("Please check your internet connection and retry")
+                    main.shortToast("Please check your internet connection and retry")
                 }
                 return@withContext mutableListOf<Video>()
             }
@@ -208,6 +214,7 @@ class Helper {
                     } catch (e: Exception) {
                         "null"
                     }
+
                     val gifmp4 = try {
                         post["preview"]
                             .asJsonObject["images"]
@@ -223,7 +230,7 @@ class Helper {
                     }
 
                     val permalink = try {
-                        "https://www.reddit.com/" + post["permalink"].asString
+                        "https://www.reddit.com" + post["permalink"].asString
                     } catch (e: Exception) {
                         "null"
                     }
@@ -276,7 +283,7 @@ class Helper {
 
             } catch (e: Exception) {
                 if (e is SocketTimeoutException) {
-                    main.longToast("Network timed out! Please check your internet connection and retry")
+                    main.shortToast("Network timed out! Please check your internet connection and retry")
                 } else {
                     Log.e(TAG, "getVideos: ${e.stackTraceToString()}")
                 }
@@ -286,6 +293,13 @@ class Helper {
         }
 
         suspend fun getSubredditInfo(subreddit: String, isUser: Boolean = false): SubReddit = withContext(IO) {
+
+            if (!isOnline(main)) {
+                mainScope().launch {
+                    main.shortToast("No internet 😔")
+                }
+                return@withContext SubReddit("", "", "", "", "", "", "", "")
+            }
 
             try {
                 val client = OkHttpClient()
@@ -353,7 +367,7 @@ class Helper {
                 return@withContext SubReddit(title, titlePrefixed, desc, headerImage, icon, banner, subscribers, fullDesc)
             } catch (e: Exception) {
                 if (e is SocketTimeoutException) {
-                    main.longToast("Network timed out! Please check your internet connection and retry")
+                    main.shortToast("Network timed out! Please check your internet connection and retry")
                 } else {
                     Log.e(TAG, "getSubredditInfo: ${e.stackTraceToString()}")
                 }
@@ -378,7 +392,7 @@ class Helper {
                 return@withContext data["icon_img"].asString.replace("amp;", "")
             } catch (e: Exception) {
                 if (e is SocketTimeoutException) {
-                    main.longToast("Network timed out! Please check your internet connection and retry")
+                    main.shortToast("Network timed out! Please check your internet connection and retry")
                 } else {
                     Log.e(TAG, "getSubreddits: ${e.stackTraceToString()}")
                 }
@@ -415,6 +429,14 @@ class Helper {
         suspend fun getTopSubreddits() = withContext(IO) {
             searchQuery = null
             val rList = mutableListOf<Pair<String, String>>()
+
+            if (!isOnline(main)) {
+                mainScope().launch {
+                    main.shortToast("No internet 😔")
+                }
+                return@withContext rList
+            }
+
             try {
                 val client = OkHttpClient()
                 val request = Request.Builder()
@@ -438,7 +460,7 @@ class Helper {
                 }
             } catch (e: Exception) {
                 if (e is SocketTimeoutException) {
-                    main.longToast("Network timed out! Please check your internet connection and retry")
+                    main.shortToast("Network timed out! Please check your internet connection and retry")
                 } else {
                     Log.e(TAG, "getTopSubreddits: ${e.stackTraceToString()}")
                 }
@@ -449,6 +471,14 @@ class Helper {
 
         suspend fun getGifMp4(permalink: String) = withContext(IO) {
             var pair: Pair<String, String>
+
+            if (!isOnline(main)) {
+                mainScope().launch {
+                    main.shortToast("No internet 😔")
+                }
+                return@withContext Pair("", "")
+            }
+
             try {
                 val client = OkHttpClient()
                 val request = Request.Builder()
@@ -500,6 +530,14 @@ class Helper {
             Log.d(TAG, "getSubreddits: called")
             val rList = mutableListOf<Pair<String, String>>()
             val strNsfw = if (nsfwAllowed()) "&restrict_sr=true&include_over_18=on" else ""
+
+            if (!isOnline(main)) {
+                mainScope().launch {
+                    main.shortToast("No internet 😔")
+                }
+                return@withContext rList
+            }
+
             try {
                 val client = OkHttpClient()
                 val request = Request.Builder()
@@ -533,7 +571,7 @@ class Helper {
                 }
             } catch (e: Exception) {
                 if (e is SocketTimeoutException) {
-                    main.longToast("Network timed out! Please check your internet connection and retry")
+                    main.shortToast("Network timed out! Please check your internet connection and retry")
                 } else {
                     Log.e(TAG, "getSubreddits: ${e.stackTraceToString()}")
                 }

@@ -6,7 +6,7 @@
     <data>
         <variable
             name="SearchAdapter"
-            type="com.odukle.viddit.SearchAdapter" />
+            type="com.odukle.viddit.adapters.SearchAdapter" />
     </data>
 
     <com.google.android.material.card.MaterialCardView

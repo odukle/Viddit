@@ -1,4 +1,4 @@
-package com.odukle.viddit
+package com.odukle.viddit.adapters
 
 import android.animation.LayoutTransition
 import android.animation.ObjectAnimator
@@ -36,6 +36,16 @@ import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import com.odukle.viddit.*
+import com.odukle.viddit.MainActivity.Companion.main
+import com.odukle.viddit.databinding.BottomSheetDownloadBinding
+import com.odukle.viddit.databinding.ItemViewVideoBinding
+import com.odukle.viddit.fragments.MainFragment
+import com.odukle.viddit.fragments.SubRedditFragment
+import com.odukle.viddit.models.AboutPost
+import com.odukle.viddit.models.SubReddit
+import com.odukle.viddit.models.Video
+import com.odukle.viddit.utils.Helper
 import com.odukle.viddit.utils.Helper.Companion.backstack
 import com.odukle.viddit.utils.Helper.Companion.currentPlayer
 import com.odukle.viddit.utils.Helper.Companion.getGifMp4
@@ -43,9 +53,6 @@ import com.odukle.viddit.utils.Helper.Companion.getSubredditInfo
 import com.odukle.viddit.utils.Helper.Companion.getUserIcon
 import com.odukle.viddit.utils.Helper.Companion.getVideos
 import com.odukle.viddit.utils.Helper.Companion.isOnline
-import com.odukle.viddit.MainActivity.Companion.main
-import com.odukle.viddit.databinding.ItemViewVideoBinding
-import com.odukle.viddit.utils.Helper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -228,6 +235,12 @@ class VideoAdapter(
                             startDownloading(post, this@apply)
                         }
                     }
+
+//                    test?.setOnClickListener {
+//                        ioScope().launch {
+//                            checkAudio(post.permalink)
+//                        }
+//                    }
                 }
             }
 
@@ -308,10 +321,10 @@ class VideoAdapter(
         }
     }
 
-    override fun onViewAttachedToWindow(holder: VideoAdapter.VideoViewHolder) {
+    override fun onViewAttachedToWindow(holder: VideoViewHolder) {
         if (!fragment.isVisible) fragment = getCurrentFragment() as MainFragment
-        if (holder.absoluteAdapterPosition == lowerHolderPos) animateViewHolder(holder.itemView, true)
-        else animateViewHolder(holder.itemView, false)
+//        if (holder.absoluteAdapterPosition == lowerHolderPos) animateViewHolder(holder.itemView, true)
+//        else animateViewHolder(holder.itemView, false)
         holderPosTracker = Runnable {
             middleHolderPos = holder.absoluteAdapterPosition
             upperHolderPos = middleHolderPos - 1
@@ -459,7 +472,7 @@ class VideoAdapter(
         super.onViewAttachedToWindow(holder)
     }
 
-    override fun onViewDetachedFromWindow(holder: VideoAdapter.VideoViewHolder) {
+    override fun onViewDetachedFromWindow(holder: VideoViewHolder) {
         if (holder.absoluteAdapterPosition == middleHolderPos) holderPosTracker.run()
         fragment.binder.layoutToolbar.hide()
         detachedHolder = holder
@@ -520,9 +533,6 @@ class VideoAdapter(
     }
 
     fun shuffle() {
-        Log.d(TAG, "shuffle: called")
-        Log.d(TAG, "shuffle: ${list.size}")
-        Log.d(TAG, "shuffle: ${unShuffledList.size}")
         list.shuffle()
         notifyItemRangeChanged(0, itemCount)
     }
@@ -808,47 +818,87 @@ class VideoAdapter(
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     companion object {
         @SuppressLint("Range")
-        fun startDownloading(post: Video, binder: ItemViewVideoBinding): Long {
-            val permalink = post.permalink
-            val name = post.name
+        fun startDownloading(
+            post: Video?,
+            binder: ItemViewVideoBinding?,
+            aboutPost: AboutPost? = null,
+            dBinder: BottomSheetDownloadBinding? = null
+        ) {
+            val permalink = post?.permalink ?: aboutPost!!.permalink
+            val name = (post?.title ?: aboutPost!!.title).removeSpecialChars().replace(" ", "_")
             main.shortToast("Download started")
-            binder.progressDownload.show()
-            binder.saveLayout.hide()
-            val url = if (post.isVideo) {
-                val fallbackUrl = post.videoDownloadUrl
-                val audioUrl = fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
-                "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
-            } else {
-                post.gifMp4
-            }
-
-            Log.d(TAG, "startDownloading: $url")
-
-            val request = DownloadManager.Request(Uri.parse(url))
-            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-                .setDescription("Downloading reddit video...")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, "Viddit/$name.mp4")
-
-            val manager = main.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val id = manager.enqueue(request)
-
-            val receiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context?, intent: Intent?) {
-                    val mId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-                    if (id == mId) {
-                        main.longToast("Downloaded $name.mp4 to Movies/Viddit")
-                        binder.progressDownload.hide()
-                        binder.saveLayout.show()
-                    }
+            binder?.progressDownload?.show()
+            binder?.saveLayout?.hide()
+            var audioUrl = ""
+            ioScope().launch {
+                if (!hasAudio(permalink)) {
+                    audioUrl = "false"
                 }
 
-            }
+                mainScope().launch {
 
-            main.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
-            return id
+                    val url = if (post != null) {
+                        if (post.isVideo) {
+                            val fallbackUrl = post.videoDownloadUrl
+                            audioUrl = if (audioUrl.isEmpty()) {
+                                fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
+                            } else {
+                                audioUrl
+                            }
+                            "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
+                        } else {
+                            post.gifMp4
+                        }
+                    } else {
+                        if (aboutPost!!.downloadLink.contains("DASH_", false)) {
+                            val fallbackUrl = aboutPost.downloadLink
+                            audioUrl = if (audioUrl.isEmpty()) {
+                                fallbackUrl.substring(0, fallbackUrl.indexOf("DASH_")) + "DASH_audio.mp4?source=fallback"
+                            } else {
+                                audioUrl
+                            }
+                            "https://sd.redditsave.com/download.php?permalink=$permalink&video_url=$fallbackUrl&audio_url=$audioUrl"
+                        } else aboutPost.downloadLink
+                    }
+
+                    Log.d(TAG, "startDownloading: $url")
+
+                    try {
+                        val request = DownloadManager.Request(Uri.parse(url))
+                        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
+                            .setDescription("Downloading reddit video...")
+                            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                            .setDestinationInExternalPublicDir(Environment.DIRECTORY_MOVIES, "Viddit/$name.mp4")
+
+                        val manager = main.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                        val id = manager.enqueue(request)
+
+                        val receiver = object : BroadcastReceiver() {
+                            override fun onReceive(context: Context?, intent: Intent?) {
+                                val mId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+                                if (id == mId) {
+                                    main.longToast("Downloaded $name.mp4 to Movies/Viddit")
+                                    binder?.progressDownload?.hide()
+                                    dBinder?.progressDownload?.hide()
+                                    dBinder?.ivPlay?.show()
+                                    dBinder?.tvDownloading?.text = "Downloaded $name.mp4 to Movies/Viddit"
+                                    binder?.saveLayout?.show()
+                                }
+                            }
+                        }
+
+                        main.registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+                    } catch (e: Exception) {
+                        main.shortToast("${e.message}")
+                        dBinder?.progressDownload?.hide()
+                        dBinder?.ivThumb?.setImageResource(android.R.drawable.ic_menu_report_image)
+                        dBinder?.tvDownloading?.text = "Link is not valid"
+                    }
+                }
+            }
         }
     }
 }
