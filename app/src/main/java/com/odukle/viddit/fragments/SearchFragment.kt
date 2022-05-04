@@ -115,7 +115,6 @@ class SearchFragment : Fragment() {
                     val rList = Helper.getSubreddits(query)
                     runMain {
                         populateRv(rList)
-
                         v.clearFocus()
                         tvQuery.text = "Search results"
                     }

@@ -14,8 +14,8 @@ android {
         applicationId "com.odukle.viddit"
         minSdkVersion 23
         targetSdkVersion 31
-        versionCode 12
-        versionName "2.2"
+        versionCode 13
+        versionName "2.21"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
